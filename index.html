@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FF4 Champion Arena - Units 1 to 7</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --secondary: #0891b2;
+      --accent: #f59e0b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 20px;
+      --shadow: 0 8px 20px rgba(0,0,0,0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    #app-container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--surface);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 0 35px rgba(0,0,0,0.08);
+      padding-bottom: 85px;
+    }
+
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    header {
+      background: linear-gradient(135deg, #4f46e5, #0891b2);
+      color: white;
+      padding: 16px 18px 20px;
+      border-radius: 0 0 26px 26px;
+      box-shadow: 0 8px 24px rgba(79, 70, 229, 0.25);
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .badge {
+      background: rgba(255,255,255,0.22);
+      padding: 5px 12px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .unit-selector-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.2);
+      padding: 8px 12px;
+      border-radius: 14px;
+      margin-bottom: 10px;
+    }
+    .unit-picker {
+      background: transparent;
+      border: none;
+      color: white;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 14px;
+      outline: none;
+      width: 100%;
+      cursor: pointer;
+    }
+    .unit-picker option { color: var(--text); background: white; }
+
+    .user-header-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.95);
+      border-radius: 14px;
+      padding: 9px 14px;
+      color: var(--primary);
+      font-weight: 800;
+    }
+    .btn-switch-user {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .view { display: none; padding: 18px; }
+    .view.active { display: block; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .section-card {
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+      transition: all 0.2s;
+    }
+    .section-card.locked {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      opacity: 0.85;
+      box-shadow: none;
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .section-title { font-size: 16px; font-weight: 900; }
+    .status-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .status-badge.unlocked { background: #dcfce7; color: #166534; }
+    .status-badge.locked { background: #fee2e2; color: #991b1b; }
+
+    .btn {
+      width: 100%;
+      padding: 13px;
+      border-radius: 14px;
+      border: none;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.1s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 14px rgba(79,70,229,0.3); }
+    .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--muted); }
+    .btn-danger { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+    .quiz-box {
+      background: white;
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    .quiz-progress {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .bar-bg { width: 100%; height: 9px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+    .bar-fill { height: 100%; width: 0%; background: var(--primary); transition: width 0.25s; }
+
+    .prompt-type {
+      display: inline-block;
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 900;
+      background: #e0e7ff;
+      color: var(--primary);
+      padding: 4px 9px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    .question-prompt { font-size: 16px; font-weight: 800; line-height: 1.45; margin-bottom: 16px; }
+
+    .option-btn {
+      width: 100%;
+      text-align: left;
+      padding: 13px 16px;
+      border-radius: 13px;
+      border: 2px solid var(--border);
+      background: white;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s;
+    }
+    .option-btn.correct { border-color: var(--success); background: #ecfdf5; color: #065f46; font-weight: 800; }
+    .option-btn.wrong { border-color: var(--danger); background: #fef2f2; color: #991b1b; }
+
+    .input-text {
+      width: 100%;
+      padding: 13px;
+      border-radius: 13px;
+      border: 2px solid var(--border);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .input-text:focus { border-color: var(--primary); }
+
+    .feedback-box {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 13px;
+      font-size: 13px;
+      line-height: 1.5;
+      animation: fadeIn 0.2s ease;
+    }
+    .feedback-box.wrong {
+      background: #fff1f2;
+      border: 1.5px solid #fecdd3;
+      color: #9f1239;
+    }
+    .feedback-title {
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .info-card {
+      background: #f8fafc;
+      border-left: 4px solid var(--secondary);
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 14px;
+      color: #334155;
+    }
+
+    .podium {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 10px;
+      margin: 18px 0 22px;
+    }
+    .podium-slot { text-align: center; width: 95px; }
+    .podium-box { border-radius: 14px 14px 0 0; padding: 10px 4px; font-weight: 900; color: white; }
+    .rank-1 .podium-box { height: 95px; background: linear-gradient(180deg, #f59e0b, #d97706); }
+    .rank-2 .podium-box { height: 75px; background: linear-gradient(180deg, #94a3b8, #64748b); }
+    .rank-3 .podium-box { height: 60px; background: linear-gradient(180deg, #b45309, #78350f); }
+    .podium-name { font-size: 12px; font-weight: 800; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .rank-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .rank-left { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+    .rank-idx { width: 24px; height: 24px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; }
+
+    .teacher-card {
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 16px;
+      padding: 15px;
+      margin-bottom: 14px;
+    }
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px dashed #cbd5e1;
+      font-size: 14px;
+    }
+    .toggle-row:last-child { border-bottom: none; }
+    .switch { position: relative; display: inline-block; width: 46px; height: 26px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--primary); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .modal-box {
+      background: white;
+      width: 100%;
+      max-width: 360px;
+      border-radius: 22px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+    }
+
+    nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      max-width: 480px;
+      background: white;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 9px 0;
+      z-index: 100;
+    }
+    .nav-btn {
+      background: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      flex: 1;
+    }
+    .nav-btn.active { color: var(--primary); }
+    .nav-btn span.icon { font-size: 19px; }
+  </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div id="app-container">
+  <header>
+    <div class="header-top">
+      <span class="badge">📘 Family & Friends 4</span>
+      <span class="badge" id="student-score">⭐ 0 XP</span>
+    </div>
+    
+    <div class="unit-selector-bar">
+      <span>📖 Chọn Tiết:</span>
+      <select id="active-lesson-selector" class="unit-picker">
+      </select>
+    </div>
+
+    <div class="user-header-box">
+      <span>👤 <span id="current-user-name">Đang tải...</span></span>
+      <button class="btn-switch-user" id="btn-open-login">Đổi Học Sinh</button>
+    </div>
+  </header>
+
+  <!-- HOME VIEW -->
+  <div id="view-home" class="view active">
+    <div style="margin-bottom: 14px;">
+      <h2 style="font-size: 18px; font-weight: 900;" id="home-lesson-title">Đang tải bài tập... 🎯</h2>
+      <p style="font-size: 13px; color: var(--muted);">Tự động xáo trộn câu hỏi & vị trí đáp án mỗi lần luyện tập!</p>
+    </div>
+
+    <div class="section-card" id="card-partA">
+      <div class="section-header">
+        <div>
+          <span class="section-title" id="title-partA">Phần A</span>
+          <div style="font-size: 12px; color: var(--muted);" id="count-partA">0 câu hỏi</div>
+        </div>
+        <span class="status-badge" id="badge-partA">Đang mở</span>
+      </div>
+      <button class="btn btn-primary" id="btn-start-partA">Làm Bài Ngay 🚀</button>
+    </div>
+
+    <div class="section-card" id="card-partB">
+      <div class="section-header">
+        <div>
+          <span class="section-title" id="title-partB">Phần B</span>
+          <div style="font-size: 12px; color: var(--muted);" id="count-partB">0 câu hỏi</div>
+        </div>
+        <span class="status-badge" id="badge-partB">Đang khóa</span>
+      </div>
+      <button class="btn btn-primary" id="btn-start-partB">Làm Bài Ngay 🚀</button>
+    </div>
+
+    <div class="section-card" id="card-partC">
+      <div class="section-header">
+        <div>
+          <span class="section-title" id="title-partC">Phần C</span>
+          <div style="font-size: 12px; color: var(--muted);" id="count-partC">0 câu hỏi</div>
+        </div>
+        <span class="status-badge" id="badge-partC">Đang khóa</span>
+      </div>
+      <button class="btn btn-primary" id="btn-start-partC">Làm Bài Ngay 🚀</button>
+    </div>
+  </div>
+
+  <!-- QUIZ VIEW -->
+  <div id="view-quiz" class="view">
+    <div class="quiz-box">
+      <div class="quiz-progress">
+        <span id="quiz-part-name">Luyện Tập</span>
+        <span id="quiz-counter">Câu 1/10</span>
+      </div>
+      <div class="bar-bg">
+        <div class="bar-fill" id="quiz-progress-bar"></div>
+      </div>
+      <div id="quiz-body"></div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD VIEW -->
+  <div id="view-leaderboard" class="view">
+    <div style="text-align: center; margin-bottom: 12px;">
+      <h2 style="font-size: 19px; font-weight: 900;">Bảng Vàng Thi Đua 🏆</h2>
+      <div style="display: flex; justify-content: center; gap: 8px; margin-top: 10px;">
+        <button class="badge" id="btn-rank-session" style="cursor:pointer; border:none; background:var(--primary); color:white;">Buổi Này</button>
+        <button class="badge" id="btn-rank-month" style="cursor:pointer; border:none; background:#e2e8f0; color:var(--text);">Bảng Vàng Tháng</button>
+      </div>
+    </div>
+    <div class="podium" id="podium-area"></div>
+    <div id="ranking-list"></div>
+  </div>
+
+  <!-- TEACHER VIEW -->
+  <div id="view-teacher" class="view">
+    <div id="teacher-auth">
+      <div style="text-align: center; padding: 30px 10px;">
+        <div style="font-size: 40px; margin-bottom: 8px;">🔒</div>
+        <h3 style="margin-bottom: 6px;">Khu Vực Giáo Viên</h3>
+        <p style="font-size: 13px; color: var(--muted); margin-bottom: 14px;">Nhập PIN quản trị để mở khóa bài học và quản lý điểm số.</p>
+        <input type="password" id="teacher-pin" class="input-text" placeholder="Nhập PIN quản trị" style="text-align: center; max-width: 220px; font-size: 18px;">
+        <button class="btn btn-primary" id="btn-submit-pin" style="max-width: 220px; margin: 0 auto;">Xác Nhận</button>
+      </div>
+    </div>
+
+    <div id="teacher-controls" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 17px;">Bảng Điều Khiển Tiết Học ⚙️</h3>
+        <button class="badge" id="btn-logout-teacher" style="background:#ef4444; color:white; border:none; cursor:pointer;">Đăng xuất</button>
+      </div>
+
+      <!-- Lock/Unlock -->
+      <div class="teacher-card">
+        <h4 style="margin-bottom: 8px; font-size: 13px; color: var(--primary);">🔓 KHÓA / MỞ BÀI (TIẾT ĐANG CHỌN)</h4>
+        <div class="toggle-row">
+          <span>Phần A</span>
+          <label class="switch">
+            <input type="checkbox" id="lock-partA">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <span>Phần B</span>
+          <label class="switch">
+            <input type="checkbox" id="lock-partB">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <span>Phần C</span>
+          <label class="switch">
+            <input type="checkbox" id="lock-partC">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Reset & Backup -->
+      <div class="teacher-card">
+        <h4 style="margin-bottom: 8px; font-size: 13px; color: #dc2626;">🔄 THI ĐUA & SAO LƯU</h4>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button class="btn btn-danger" id="btn-reset-session">Reset Điểm Buổi Này (Bắt đầu buổi mới)</button>
+          <button class="btn btn-danger" id="btn-reset-month" style="background:#fee2e2; color:#b91c1c;">Reset Bảng Vàng Tháng</button>
+          <button class="btn btn-outline" id="btn-backup-data">💾 Xuất File Sao Lưu (Backup)</button>
+        </div>
+      </div>
+
+      <!-- Student PIN Manager -->
+      <div class="teacher-card">
+        <h4 style="margin-bottom: 8px; font-size: 13px;">🔑 QUẢN LÝ MÃ PIN 18 HỌC SINH</h4>
+        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">PIN mặc định của học sinh là <strong>0000</strong>.</div>
+        <div id="teacher-pin-list" style="max-height: 180px; overflow-y: auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav>
+    <button class="nav-btn active" id="nav-btn-home">
+      <span class="icon">🏠</span>Bài Tập
+    </button>
+    <button class="nav-btn" id="nav-btn-leaderboard">
+      <span class="icon">🏆</span>Bảng Vàng
+    </button>
+    <button class="nav-btn" id="nav-btn-teacher">
+      <span class="icon">👩‍🏫</span>Giáo Viên
+    </button>
+  </nav>
+</div>
+
+<!-- Modal Student Login -->
+<div id="modal-login" class="modal-overlay" style="display: none;">
+  <div class="modal-box">
+    <div style="font-size: 38px; margin-bottom: 6px;">🔐</div>
+    <h3 style="margin-bottom: 6px; font-size: 18px;">Đăng Nhập Học Sinh</h3>
+    <p style="font-size: 12px; color: var(--muted); margin-bottom: 14px;">Chọn tên của em và nhập đúng mã PIN.</p>
+    <select id="modal-select-student" class="input-text" style="font-weight:700;"></select>
+    <input type="password" id="modal-student-pin" class="input-text" maxlength="6" placeholder="Mã PIN học sinh" style="text-align: center; font-size: 18px;">
+    <div style="display: flex; gap: 8px;">
+      <button class="btn btn-outline" id="btn-close-modal">Đóng</button>
+      <button class="btn btn-primary" id="btn-confirm-login">Vào Học</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   1. SOUND FX & CONFETTI ENGINE
+   ========================================================= */
+const SoundFX = {
+  ctx: null,
+  init() {
+    try {
+      if (!this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) this.ctx = new AudioCtx();
+      }
+      if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
+    } catch(e) {}
+  },
+  playSuccess() {
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(587.33, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } catch(e) {}
+  },
+  playWrong() {
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.linearRampToValueAtTime(140, now + 0.25);
+      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } catch(e) {}
+  },
+  playWin() {
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        const now = this.ctx.currentTime + idx * 0.1;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      });
+    } catch(e) {}
+  }
+};
+
+const Confetti = {
+  canvas: document.getElementById("confetti-canvas"),
+  ctx: null,
+  particles: [],
+  animating: false,
+  init() {
+    if (this.canvas) {
+      this.ctx = this.canvas.getContext("2d");
+      this.resize();
+    }
+  },
+  resize() {
+    if (this.canvas) {
+      this.canvas.width = window.innerWidth;
+      this.canvas.height = window.innerHeight;
+    }
+  },
+  fire(count = 35) {
+    if (!this.ctx) this.init();
+    const colors = ["#4f46e5", "#0891b2", "#f59e0b", "#10b981", "#ec4899"];
+    for (let i = 0; i < count; i++) {
+      this.particles.push({
+        x: window.innerWidth * 0.5 + (Math.random() - 0.5) * 80,
+        y: window.innerHeight * 0.5 + (Math.random() - 0.5) * 60,
+        vx: (Math.random() - 0.5) * 14,
+        vy: -Math.random() * 10 - 4,
+        size: Math.random() * 8 + 4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rotation: Math.random() * 360,
+        rotSpeed: (Math.random() - 0.5) * 12,
+        life: 1
+      });
+    }
+    if (!this.animating) {
+      this.animating = true;
+      this.loop();
+    }
+  },
+  loop() {
+    Confetti.ctx.clearRect(0, 0, Confetti.canvas.width, Confetti.canvas.height);
+    for (let i = Confetti.particles.length - 1; i >= 0; i--) {
+      const p = Confetti.particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.35;
+      p.rotation += p.rotSpeed;
+      p.life -= 0.018;
+
+      Confetti.ctx.save();
+      Confetti.ctx.translate(p.x, p.y);
+      Confetti.ctx.rotate((p.rotation * Math.PI) / 180);
+      Confetti.ctx.fillStyle = p.color;
+      Confetti.ctx.globalAlpha = Math.max(p.life, 0);
+      Confetti.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+      Confetti.ctx.restore();
+
+      if (p.life <= 0) Confetti.particles.splice(i, 1);
+    }
+    if (Confetti.particles.length > 0) requestAnimationFrame(Confetti.loop);
+    else {
+      Confetti.animating = false;
+      Confetti.ctx.clearRect(0, 0, Confetti.canvas.width, Confetti.canvas.height);
+    }
+  }
+};
+window.addEventListener("resize", () => Confetti.resize());
+
+/* =========================================================
+   2. 18 OFFICIAL STUDENTS & COMPREHENSIVE QUESTION DATA (UNITS 1 - 7)
+   ========================================================= */
+const OFFICIAL_STUDENTS = [
+  "Minh An", "Chiếp", "Bảo Long", "Đức Vinh", "Hồng Đạt", 
+  "Phương Anh", "Khánh Linh (Nhím)", "Khánh Linh (Heo)", "Nhật Linh", 
+  "Huy Hoàng", "Thảo Nguyên", "Khánh Vy", "Hoàng Bách (Bờm)", 
+  "Hương Thảo", "Khánh", "Đoàn", "Bảo Ngọc", "Anh Đức"
+];
+
+const COMPREHENSIVE_LESSONS = {
+  // UNIT 1
+  "u1_l1": {
+    title: "Unit 1 - Tiết 1: The restaurant",
+    partATitle: "A. Vocabulary (15 câu)",
+    partBTitle: "B. Story (8 câu)",
+    partCTitle: "C. Grammar (28 câu)",
+    partA: [
+      { type: "choice", sub: "A1. Meaning", text: "What is a 'waiter'?", options: ["a man who brings food in a restaurant", "a list of food", "a woman who brings food", "special clothes"], correctAns: "a man who brings food in a restaurant", exp: "Waiter là nam bồi bàn." },
+      { type: "choice", sub: "A1. Meaning", text: "What is a 'menu'?", options: ["a list of food in a restaurant", "a customer", "a waiter", "a uniform"], correctAns: "a list of food in a restaurant", exp: "Menu là thực đơn." },
+      { type: "choice", sub: "A1. Meaning", text: "What is a 'uniform'?", options: ["special clothes for work or school", "a restaurant", "a glass of milk", "a menu"], correctAns: "special clothes for work or school", exp: "Uniform là đồng phục." },
+      { type: "choice", sub: "A2. Containers", text: "My dad drinks a ________ of coffee every morning.", options: ["cup", "bottle", "bowl", "plate"], correctAns: "cup", exp: "Tách cà phê: a cup of coffee." },
+      { type: "choice", sub: "A2. Containers", text: "Can I have a ________ of milk, please?", options: ["glass", "plate", "bowl", "cup"], correctAns: "glass", exp: "Ly sữa: a glass of milk." },
+      { type: "input", sub: "A3. Unscramble", text: "Unscramble: iwtrea →", correctAns: "waiter", exp: "Từ đúng: waiter." },
+      { type: "input", sub: "A3. Unscramble", text: "Unscramble: nmue →", correctAns: "menu", exp: "Từ đúng: menu." },
+      { type: "input", sub: "A3. Unscramble", text: "Unscramble: mrfouin →", correctAns: "uniform", exp: "Từ đúng: uniform." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. True / False", text: "The waiters usually wear blue uniforms.", options: ["True", "False"], correctAns: "True", exp: "Trong bài: 'They usually wear blue uniforms.'" },
+      { type: "choice", sub: "B1. True / False", text: "The waiters are wearing red today.", options: ["False", "True"], correctAns: "False", exp: "Hôm nay họ mặc màu xanh lá (green)." },
+      { type: "choice", sub: "B2. Questions", text: "Why do the family get free ice creams?", options: ["Because they are the first customers.", "Because it's a birthday.", "Because they ordered pasta.", "Because they were early."], correctAns: "Because they are the first customers.", exp: "'You're our first customers. Have free ice creams!'" }
+    ],
+    partC: [
+      { type: "choice", sub: "C1. Choose", text: "They usually (wear / are wearing) blue uniforms.", options: ["wear", "are wearing"], correctAns: "wear", exp: "usually chỉ thói quen → wear." },
+      { type: "choice", sub: "C1. Choose", text: "Today the waiter (carries / is carrying) a tray.", options: ["is carrying", "carries"], correctAns: "is carrying", exp: "today chỉ hiện tại tiếp diễn → is carrying." },
+      { type: "input", sub: "C2. Verb Form", text: "Mai usually _________ (drink) milk.", correctAns: "drinks", exp: "Mai (ngôi 3 số ít) thêm -s." },
+      { type: "input", sub: "C3. Spelling", text: "Write -ing form of sit: →", correctAns: "sitting", exp: "Gấp đôi 't': sitting." }
+    ]
+  },
+  "u1_l2": {
+    title: "Unit 1 - Tiết 2: Time Markers & Phonics",
+    partATitle: "A. Grammar: Time Markers (20 câu)",
+    partBTitle: "B. Phonics: Long a & Long e (22 câu)",
+    partCTitle: "C. Reading: Ben's Sunday breakfast (8 câu)",
+    partA: [
+      { type: "choice", sub: "A1. Trật tự từ", text: "Sắp xếp: always / I / breakfast / have", options: ["I always have breakfast.", "I have always breakfast.", "Always I have breakfast."], correctAns: "I always have breakfast.", exp: "'always' đứng trước động từ thường." },
+      { type: "choice", sub: "A1. Trật tự từ", text: "Sắp xếp: is / never / He / late", options: ["He is never late.", "He never is late.", "Late is he never."], correctAns: "He is never late.", exp: "'never' đứng sau To Be." },
+      { type: "choice", sub: "A2. Bảng tần suất", text: "Nam: ●●●● (100%) - drink milk", options: ["Nam always drinks milk.", "Nam never drinks milk.", "Nam usually drinks milk."], correctAns: "Nam always drinks milk.", exp: "●●●● = always." },
+      { type: "choice", sub: "A3. Chia động từ", text: "Look! The cat ________ (sit) on the table.", options: ["is sitting", "sits", "sit"], correctAns: "is sitting", exp: "'Look!' dùng Hiện tại tiếp diễn." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. Phân loại âm", text: "Word: 'rain' thuộc nhóm âm nào?", options: ["Long a /eɪ/", "Long e /iː/"], correctAns: "Long a /eɪ/", exp: "rain là âm /eɪ/." },
+      { type: "choice", sub: "B1. Phân loại âm", text: "Word: 'tree' thuộc nhóm âm nào?", options: ["Long e /iː/", "Long a /eɪ/"], correctAns: "Long e /iː/", exp: "tree là âm /iː/." },
+      { type: "choice", sub: "B2. Chọn từ khác âm", text: "train · play · tree · day", options: ["tree", "train", "play", "day"], correctAns: "tree", exp: "tree là /iː/, còn lại là /eɪ/." },
+      { type: "input", sub: "B3. Điền chữ cái", text: "Điền chữ cái vào: r____n (cơn mưa)", correctAns: "rain", exp: "rain." }
+    ],
+    partC: [
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C1. Đọc hiểu",
+        text: "What does Ben usually have for breakfast?",
+        options: ["cereal with milk and orange juice", "pancakes and tea", "toast with butter"],
+        correctAns: "cereal with milk and orange juice",
+        exp: "Ben: 'I usually have cereal with milk and a glass of orange juice.'"
+      },
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C2. True / False",
+        text: "Ben is from Scotland.",
+        options: ["False", "True"],
+        correctAns: "False",
+        exp: "Ben đến từ nước Anh (England)."
+      }
+    ]
+  },
+
+  // UNIT 2
+  "u2_l1": {
+    title: "Unit 2 - Tiết 1: We had a concert (Past simple)",
+    partATitle: "A. Vocabulary (Concert words)",
+    partBTitle: "B. Story (Amy's concert)",
+    partCTitle: "C. Grammar: Past simple (was/were, had, -ed)",
+    partA: [
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: otccrne →", correctAns: "concert", exp: "Buổi hòa nhạc: concert." },
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: niivlo →", correctAns: "violin", exp: "Đàn vĩ cầm: violin." },
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: ineadecu →", correctAns: "audience", exp: "Khán giả: audience." },
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: odrrcree →", correctAns: "recorder", exp: "Sáo recorder." },
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: rtmteup →", correctAns: "trumpet", exp: "Kèn trumpet." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "People who watch a concert:", options: ["audience", "waiter", "customer", "player"], correctAns: "audience", exp: "Khán giả: audience." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "The place where musicians stand:", options: ["stage", "roundabout", "restaurant", "hall"], correctAns: "stage", exp: "Sân khấu: stage." },
+      { type: "choice", sub: "A3. Điền từ", text: "The ______ clapped and cheered at the end.", options: ["audience", "trumpet", "programme", "stage"], correctAns: "audience", exp: "Khán giả vỗ tay: audience." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. True / False", text: "1. The concert was at Amy and Leo's house in Australia.", options: ["True", "False"], correctAns: "True", exp: "Đúng theo bài khoá trang 14." },
+      { type: "choice", sub: "B1. True / False", text: "2. Leo played the violin.", options: ["False", "True"], correctAns: "False", exp: "Leo chơi trống (Leo played the drums)." },
+      { type: "choice", sub: "B1. True / False", text: "3. Amy plays the guitar.", options: ["False", "True"], correctAns: "False", exp: "Amy chơi đàn violin chứ không phải guitar." },
+      { type: "choice", sub: "B2. Câu hỏi", text: "Whose idea is the surprise concert?", options: ["Max's idea", "Leo's idea", "Amy's idea", "Mum's idea"], correctAns: "Max's idea", exp: "Max nói: 'Let's make it a surprise!'" }
+    ],
+    partC: [
+      { type: "choice", sub: "C1. Chọn từ", text: "Yesterday I (am / was) at home.", options: ["was", "am"], correctAns: "was", exp: "Quá khứ của I am là I was." },
+      { type: "choice", sub: "C1. Chọn từ", text: "We (had / have) a concert last week.", options: ["had", "have"], correctAns: "had", exp: "last week dùng thì quá khứ had." },
+      { type: "choice", sub: "C1. Chọn từ", text: "They (were / was) happy.", options: ["were", "was"], correctAns: "were", exp: "They đi với were." },
+      { type: "choice", sub: "C1. Chọn từ", text: "The audience (clapped / clapt) loudly.", options: ["clapped", "clapt"], correctAns: "clapped", exp: "Gấp đôi p: clapped." },
+      { type: "choice", sub: "C3. Sắp xếp", text: "had / a / We / concert / last year", options: ["We had a concert last year.", "We a concert had last year.", "Last year had we a concert."], correctAns: "We had a concert last year.", exp: "S + V2 + O + time." },
+      { type: "choice", sub: "C4. Sửa lỗi sai", text: "Sửa lỗi: 'I was play the drums yesterday.'", options: ["I played the drums yesterday.", "I was played the drums yesterday.", "I play the drums yesterday."], correctAns: "I played the drums yesterday.", exp: "Không dùng was + V nguyên thể." }
+    ]
+  },
+  "u2_l2": {
+    title: "Unit 2 - Tiết 2: Time markers & Phonics (long i, o, u)",
+    partATitle: "A. Grammar: Time markers (yesterday, last, ago)",
+    partBTitle: "B. Phonics: Long i, Long o, Long u",
+    partCTitle: "C. Reading: School concert",
+    partA: [
+      { type: "choice", sub: "A1. Điền dấu hiệu", text: "My birthday was ______ week.", options: ["last", "yesterday", "ago"], correctAns: "last", exp: "last week." },
+      { type: "choice", sub: "A1. Điền dấu hiệu", text: "We had a party two days ______.", options: ["ago", "last", "yesterday"], correctAns: "ago", exp: "two days ago." },
+      { type: "choice", sub: "A1. Điền dấu hiệu", text: "______ I was at school.", options: ["Yesterday", "Ago", "Last"], correctAns: "Yesterday", exp: "Yesterday đứng đầu câu." },
+      { type: "choice", sub: "A2. Viết câu", text: "party / two days ago (have)", options: ["We had a party two days ago.", "We have a party two days ago.", "We had a party ago two days."], correctAns: "We had a party two days ago.", exp: "ago đứng sau cụm thời gian." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. Chọn từ khác âm", text: "light · cry · boat · sky", options: ["boat", "light", "cry", "sky"], correctAns: "boat", exp: "boat là âm /əʊ/ (long o), còn lại là /aɪ/." },
+      { type: "choice", sub: "B1. Chọn từ khác âm", text: "bone · blow · moon · coat", options: ["moon", "bone", "blow", "coat"], correctAns: "moon", exp: "moon là âm /uː/ (long u)." },
+      { type: "choice", sub: "B1. Chọn từ khác âm", text: "blue · tune · soap · flute", options: ["soap", "blue", "tune", "flute"], correctAns: "soap", exp: "soap là âm /əʊ/." },
+      { type: "choice", sub: "B2. Phân loại âm", text: "Từ 'bright' thuộc nhóm nào?", options: ["long i", "long o", "long u"], correctAns: "long i", exp: "bright là âm long i." },
+      { type: "choice", sub: "B2. Phân loại âm", text: "Từ 'room' thuộc nhóm nào?", options: ["long u", "long i", "long o"], correctAns: "long u", exp: "room là âm long u." }
+    ],
+    partC: [
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C1. Đọc hiểu",
+        text: "What did Mai play?",
+        options: ["the recorder", "the drums", "the violin", "the trumpet"],
+        correctAns: "the recorder",
+        exp: "Mai played the recorder."
+      },
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C1. True / False",
+        text: "Nam played the violin.",
+        options: ["False", "True"],
+        correctAns: "False",
+        exp: "Nam chơi trống (Nam played the drums)."
+      }
+    ]
+  },
+
+  // UNIT 3
+  "u3_l1": {
+    title: "Unit 3 - Tiết 3: The dinosaur museum (Irregular & didn't)",
+    partATitle: "A. Vocabulary (Dinosaur words)",
+    partBTitle: "B. Story (The robot dinosaur)",
+    partCTitle: "C. Grammar: Irregular verbs & didn't",
+    partA: [
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: oardnsui →", correctAns: "dinosaur", exp: "Khủng long: dinosaur." },
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: muumes →", correctAns: "museum", exp: "Bảo tàng: museum." },
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: ltnseeok →", correctAns: "skeleton", exp: "Bộ xương: skeleton." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "Opposite of 'alive':", options: ["dead", "scary", "roar", "robot"], correctAns: "dead", exp: "Ngược nghĩa với alive là dead." },
+      { type: "choice", sub: "A3. Điền từ", text: "The lion started to ______ loudly.", options: ["roar", "scream", "skeleton", "robot"], correctAns: "roar", exp: "Sư tử gầm: roar." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. True / False", text: "The children went to school today.", options: ["False", "True"], correctAns: "False", exp: "Các bạn đi bảo tàng (went to the museum)." },
+      { type: "choice", sub: "B1. True / False", text: "The dinosaur was alive.", options: ["False", "True"], correctAns: "False", exp: "Con khủng long là robot." },
+      { type: "choice", sub: "B2. Câu hỏi", text: "Was the dinosaur alive?", options: ["No, it was a robot.", "Yes, it was alive.", "No, it was a model.", "Yes, it ran."], correctAns: "No, it was a robot.", exp: "Nó là robot do Holly điều khiển." }
+    ],
+    partC: [
+      { type: "choice", sub: "C1. Chọn từ", text: "We (went / goed) to the museum.", options: ["went", "goed"], correctAns: "went", exp: "Quá khứ bất quy tắc của go là went." },
+      { type: "choice", sub: "C1. Chọn từ", text: "I (didn't go / didn't went) to school.", options: ["didn't go", "didn't went"], correctAns: "didn't go", exp: "Sau didn't dùng động từ nguyên thể." },
+      { type: "choice", sub: "C1. Chọn từ", text: "She (buyed / bought) a postcard.", options: ["bought", "buyed"], correctAns: "bought", exp: "buy đổi thành bought." },
+      { type: "choice", sub: "C4. Sửa lỗi sai", text: "Sửa lỗi: 'I didn't saw dinosaurs.'", options: ["I didn't see dinosaurs.", "I didn't seen dinosaurs.", "I not saw dinosaurs."], correctAns: "I didn't see dinosaurs.", exp: "didn't + V nguyên thể: see." }
+    ]
+  },
+  "u3_l2": {
+    title: "Unit 3 - Tiết 4: Past simple questions & Phonics f/ph",
+    partATitle: "A. Grammar: Questions (Did...? / Wh-)",
+    partBTitle: "B. Phonics: f and ph spellings",
+    partCTitle: "C. Reading: Science museum trip",
+    partA: [
+      { type: "choice", sub: "A1. Câu hỏi", text: "______ you go to the park yesterday?", options: ["Did", "Do", "Were", "Are"], correctAns: "Did", exp: "Hỏi quá khứ dùng trợ động từ Did." },
+      { type: "choice", sub: "A1. Trả lời ngắn", text: "(Did Amy buy a model?) No, she ______.", options: ["didn't", "did", "wasn't", "don't"], correctAns: "didn't", exp: "No, she didn't." },
+      { type: "choice", sub: "A1. Từ để hỏi", text: "What ______ you see at the museum?", options: ["did", "do", "were", "are"], correctAns: "did", exp: "Wh- + did + S + V." },
+      { type: "choice", sub: "A2. Viết câu", text: "Câu hỏi: you / the robot (see)", options: ["Did you see the robot?", "Did you saw the robot?", "Do you see the robot?"], correctAns: "Did you see the robot?", exp: "Did you see...?" }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. f hay ph?", text: "Điền vào từ: _oto (bức ảnh)", options: ["ph", "f"], correctAns: "ph", exp: "photo." },
+      { type: "choice", sub: "B1. f hay ph?", text: "Điền vào từ: scar_ (khăn quàng)", options: ["f", "ph"], correctAns: "f", exp: "scarf." },
+      { type: "choice", sub: "B1. f hay ph?", text: "Điền vào từ: _one (điện thoại)", options: ["ph", "f"], correctAns: "ph", exp: "phone." },
+      { type: "choice", sub: "B1. f hay ph?", text: "Điền vào từ: al_abet (bảng chữ cái)", options: ["ph", "f"], correctAns: "ph", exp: "alphabet." }
+    ],
+    partC: [
+      {
+        passage: "Yesterday Tom and his uncle went to a science museum. They saw a big dinosaur skeleton and a robot. The robot roared and Tom screamed! He wasn't scared for long. They didn't buy a model, but they bought a postcard. Tom took lots of photos. He had a great day!",
+        type: "choice",
+        sub: "C1. Đọc hiểu",
+        text: "What did Tom and his uncle buy?",
+        options: ["a postcard", "a model", "a book", "a toy robot"],
+        correctAns: "a postcard",
+        exp: "'they bought a postcard.'"
+      },
+      {
+        passage: "Yesterday Tom and his uncle went to a science museum. They saw a big dinosaur skeleton and a robot. The robot roared and Tom screamed! He wasn't scared for long. They didn't buy a model, but they bought a postcard. Tom took lots of photos. He had a great day!",
+        type: "choice",
+        sub: "C1. True / False",
+        text: "They bought a model.",
+        options: ["False", "True"],
+        correctAns: "False",
+        exp: "'They didn't buy a model'."
+      }
+    ]
+  },
+
+  // REVIEW 1
+  "rev1": {
+    title: "Tiết 5: Review 1 & Extensive reading (Fossils)",
+    partATitle: "A. Vocabulary Review (Unit 1–3)",
+    partBTitle: "B. Grammar Review (Past vs Present)",
+    partCTitle: "C. Extensive Reading: Fossils & Mary Anning",
+    partA: [
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: ltnseeok →", correctAns: "skeleton", exp: "skeleton." },
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: teswirsa →", correctAns: "waitress", exp: "waitress." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "A woman who brings food in a restaurant:", options: ["waitress", "waiter", "customer", "singer"], correctAns: "waitress", exp: "Nữ phục vụ: waitress." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. Chọn từ", text: "We (went / go) to the museum last week.", options: ["went", "go"], correctAns: "went", exp: "Quá khứ: went." },
+      { type: "choice", sub: "B2. Phân biệt thì", text: "I usually walk to school, but today I ________ (go) by bus.", options: ["am going", "go", "went"], correctAns: "am going", exp: "'today' dùng Hiện tại tiếp diễn: am going." }
+    ],
+    partC: [
+      { type: "choice", sub: "C1. True / False", text: "Fossils are bones or shells of animals that died long ago.", options: ["True", "False"], correctAns: "True", exp: "Đúng theo bài đọc Class Book trang 28." },
+      { type: "choice", sub: "C2. Câu hỏi", text: "Where was Mary Anning born?", options: ["In Lyme Regis", "In London", "In Australia", "In Egypt"], correctAns: "In Lyme Regis", exp: "Sinh ra tại thị trấn ven biển Lyme Regis." }
+    ]
+  },
+
+  // UNIT 4
+  "u4_l1": {
+    title: "Unit 4 - Tiết 6: Whose jacket is this? (Possessive pronouns)",
+    partATitle: "A. Vocabulary (Sports time)",
+    partBTitle: "B. Story (Jackets mix-up)",
+    partCTitle: "C. Grammar: Possessive pronouns (mine, yours...)",
+    partA: [
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: taejkc →", correctAns: "jacket", exp: "Áo khoác: jacket." },
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: iestanrr →", correctAns: "trainers", exp: "Giày thể thao: trainers." },
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: yrhtpo →", correctAns: "trophy", exp: "Cúp chiến thắng: trophy." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "You hit the ball with it in tennis:", options: ["racket", "jacket", "rucksack", "trophy"], correctAns: "racket", exp: "Vợt tennis: racket." },
+      { type: "choice", sub: "A3. Điền từ", text: "Our ______ won the game 3–1.", options: ["team", "trophy", "racket", "rucksack"], correctAns: "team", exp: "Đội: team." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. True / False", text: "Leo's jacket is blue.", options: ["True", "False"], correctAns: "True", exp: "'Yes, my jacket's blue.'" },
+      { type: "choice", sub: "B1. True / False", text: "Leo has got his own jacket.", options: ["False", "True"], correctAns: "False", exp: "Leo cầm nhầm áo của Holly (Holly's jacket)." },
+      { type: "choice", sub: "B2. Câu hỏi", text: "Whose jacket does Leo have?", options: ["Holly's jacket", "Max's jacket", "Amy's jacket", "His own jacket"], correctAns: "Holly's jacket", exp: "Leo mặc nhầm áo nhỏ của Holly." }
+    ],
+    partC: [
+      { type: "choice", sub: "C1. Chọn từ", text: "It's (my / mine) jacket.", options: ["my", "mine"], correctAns: "my", exp: "Trước danh từ jacket dùng tính từ sở hữu my." },
+      { type: "choice", sub: "C1. Chọn từ", text: "This trophy is (our / ours).", options: ["ours", "our"], correctAns: "ours", exp: "Đứng cuối câu thay thế danh từ dùng ours." },
+      { type: "choice", sub: "C1. Chọn từ", text: "(Whose / Who's) jacket is this?", options: ["Whose", "Who's"], correctAns: "Whose", exp: "Hỏi sở hữu dùng Whose." },
+      { type: "choice", sub: "C4. Sửa lỗi sai", text: "Sửa lỗi: 'This is mine jacket.'", options: ["This is my jacket.", "This is mine.", "This jacket is my."], correctAns: "This is my jacket.", exp: "Không nói mine + danh từ." }
+    ]
+  },
+  "u4_l2": {
+    title: "Unit 4 - Tiết 7: Adverbs (+ly, well, fast) & Phonics ll/rr",
+    partATitle: "A. Grammar: Adverbs of manner",
+    partBTitle: "B. Phonics: ll endings and rr words",
+    partCTitle: "C. Reading: Basketball",
+    partA: [
+      { type: "choice", sub: "A1. Viết trạng từ", text: "She walked ______. (slow)", options: ["slowly", "slow", "slowlier"], correctAns: "slowly", exp: "slow + ly = slowly." },
+      { type: "choice", sub: "A1. Viết trạng từ", text: "She plays football ______. (good)", options: ["well", "goodly", "good"], correctAns: "well", exp: "good đổi thành trạng từ bất quy tắc: well." },
+      { type: "choice", sub: "A1. Viết trạng từ", text: "He runs ______. (fast)", options: ["fast", "fastly", "faster"], correctAns: "fast", exp: "fast giữ nguyên: fast." },
+      { type: "choice", sub: "A2. Viết câu", text: "he / run / quick (past)", options: ["He ran quickly.", "He run quickly.", "He ran quick."], correctAns: "He ran quickly.", exp: "Quá khứ ran + trạng từ quickly." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. ll hay rr?", text: "do__ (búp bê)", options: ["ll", "rr"], correctAns: "ll", exp: "doll." },
+      { type: "choice", sub: "B1. ll hay rr?", text: "mi__or (cái gương)", options: ["rr", "ll"], correctAns: "rr", exp: "mirror." },
+      { type: "choice", sub: "B1. ll hay rr?", text: "ca__ot (củ cà rốt)", options: ["rr", "ll"], correctAns: "rr", exp: "carrot." },
+      { type: "choice", sub: "B1. ll hay rr?", text: "sme__ (ngửi thấy)", options: ["ll", "rr"], correctAns: "ll", exp: "smell." }
+    ],
+    partC: [
+      {
+        passage: "Basketball is my favourite sport. I play it with my friends every Saturday at the park. My friend Nam is tall, so he scores lots of goals. He jumps really high! I'm short, but I run fast. Last week my team won a small trophy. We were very happy!",
+        type: "choice",
+        sub: "C1. Đọc hiểu",
+        text: "Why does Nam score lots of goals?",
+        options: ["Because he is tall and jumps really high", "Because he has a new ball", "Because he runs slowly"],
+        correctAns: "Because he is tall and jumps really high",
+        exp: "'My friend Nam is tall, so he scores lots of goals.'"
+      },
+      {
+        passage: "Basketball is my favourite sport. I play it with my friends every Saturday at the park. My friend Nam is tall, so he scores lots of goals. He jumps really high! I'm short, but I run fast. Last week my team won a small trophy. We were very happy!",
+        type: "choice",
+        sub: "C1. True / False",
+        text: "The writer is tall.",
+        options: ["False", "True"],
+        correctAns: "False",
+        exp: "'I'm short, but I run fast.'"
+      }
+    ]
+  },
+
+  // UNIT 5
+  "u5_l1": {
+    title: "Unit 5 - Tiết 8: Go back to the roundabout (have to & directions)",
+    partATitle: "A. Vocabulary (Directions)",
+    partBTitle: "B. Story (Lost in the city)",
+    partCTitle: "C. Grammar: have to / had to & Directions",
+    partA: [
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: rruhy →", correctAns: "hurry", exp: "Nhanh lên: hurry." },
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: bdurtoanou →", correctAns: "roundabout", exp: "Bùng binh: roundabout." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "Red, yellow and green lights on the road:", options: ["traffic light", "roundabout", "map", "petrol station"], correctAns: "traffic light", exp: "Đèn giao thông: traffic light." },
+      { type: "choice", sub: "A3. Điền từ", text: "We have to ______ because the show starts soon.", options: ["hurry", "lost", "roundabout", "petrol"], correctAns: "hurry", exp: "Chúng ta phải nhanh lên: hurry." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. True / False", text: "They are lost.", options: ["True", "False"], correctAns: "True", exp: "Mẹ và các bạn bị lạc đường." },
+      { type: "choice", sub: "B1. True / False", text: "The theatre is near the petrol station.", options: ["False", "True"], correctAns: "False", exp: "Nhà hát ở gần ga tàu (train station)." },
+      { type: "choice", sub: "B2. Câu hỏi", text: "Who helps them?", options: ["An uncle in a car", "A policeman", "A bus driver", "A friend"], correctAns: "An uncle in a car", exp: "Uncle Tom đi ô tô qua cho đi nhờ." }
+    ],
+    partC: [
+      { type: "choice", sub: "C1. Chọn từ", text: "We (have to / has to) go home.", options: ["have to", "has to"], correctAns: "have to", exp: "We dùng have to." },
+      { type: "choice", sub: "C1. Chọn từ", text: "They (had to / have to) hurry yesterday.", options: ["had to", "have to"], correctAns: "had to", exp: "yesterday chia quá khứ: had to." },
+      { type: "choice", sub: "C1. Chỉ đường", text: "Go straight (on / in) at the roundabout.", options: ["on", "in"], correctAns: "on", exp: "Go straight on." },
+      { type: "choice", sub: "C4. Sửa lỗi sai", text: "Sửa lỗi: 'We have go back.'", options: ["We have to go back.", "We had go back.", "We have going back."], correctAns: "We have to go back.", exp: "Phải có 'to': have to go back." }
+    ]
+  },
+  "u5_l2": {
+    title: "Unit 5 - Tiết 9: Why & because / Phonics ck & c",
+    partATitle: "A. Grammar: Why & because",
+    partBTitle: "B. Phonics: ck and c endings",
+    partCTitle: "C. Reading: Going to the zoo",
+    partA: [
+      { type: "choice", sub: "A1. Why hay because?", text: "______ are you late?", options: ["Why", "Because"], correctAns: "Why", exp: "Hỏi lý do dùng Why." },
+      { type: "choice", sub: "A1. Why hay because?", text: "I'm late ______ I got lost.", options: ["because", "why"], correctAns: "because", exp: "Trả lời lý do dùng because." },
+      { type: "choice", sub: "A2. Viết câu", text: "you / happy (why) – câu hỏi", options: ["Why are you happy?", "Why you are happy?", "Why do you happy?"], correctAns: "Why are you happy?", exp: "Why are you happy?" }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. ck hay c?", text: "du__ (con vịt)", options: ["ck", "c"], correctAns: "ck", exp: "duck." },
+      { type: "choice", sub: "B1. ck hay c?", text: "plasti__ (đồ nhựa)", options: ["c", "ck"], correctAns: "c", exp: "plastic." },
+      { type: "choice", sub: "B1. ck hay c?", text: "picni__ (dã ngoại)", options: ["c", "ck"], correctAns: "c", exp: "picnic." },
+      { type: "choice", sub: "B1. ck hay c?", text: "musi__ (âm nhạc)", options: ["c", "ck"], correctAns: "c", exp: "music." }
+    ],
+    partC: [
+      {
+        passage: "Last Sunday my family went to the zoo, but we got lost near the park. We didn't read the map carefully, so we had to go back to the roundabout. Dad said, 'Turn left at the traffic lights.' Mum said, 'No, go straight on!' At last we found the zoo. We were happy because we saw baby ducks!",
+        type: "choice",
+        sub: "C1. Đọc hiểu",
+        text: "Why did the family get lost?",
+        options: ["They didn't read the map carefully", "They had no car", "The zoo was closed"],
+        correctAns: "They didn't read the map carefully",
+        exp: "'We didn't read the map carefully'."
+      },
+      {
+        passage: "Last Sunday my family went to the zoo, but we got lost near the park. We didn't read the map carefully, so we had to go back to the roundabout. Dad said, 'Turn left at the traffic lights.' Mum said, 'No, go straight on!' At last we found the zoo. We were happy because we saw baby ducks!",
+        type: "choice",
+        sub: "C1. True / False",
+        text: "They didn't find the zoo.",
+        options: ["False", "True"],
+        correctAns: "False",
+        exp: "'At last we found the zoo.'"
+      }
+    ]
+  },
+
+  // UNIT 6
+  "u6_l1": {
+    title: "Unit 6 - Tiết 10: The best bed! (Comparatives: long adj)",
+    partATitle: "A. Vocabulary (Describing objects)",
+    partBTitle: "B. Story (Broken bed)",
+    partCTitle: "C. Grammar: more/less... than & the most/least",
+    partA: [
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: lmacrefboto →", correctAns: "comfortable", exp: "comfortable (thoải mái)." },
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: epniexesv →", correctAns: "expensive", exp: "expensive (đắt tiền)." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "The opposite of cheap:", options: ["expensive", "comfortable", "modern", "wooden"], correctAns: "expensive", exp: "Đắt tiền: expensive." },
+      { type: "choice", sub: "A3. Điền từ", text: "This bed is soft and ______.", options: ["comfortable", "hard", "metal", "broken"], correctAns: "comfortable", exp: "Êm ái và thoải mái: comfortable." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. True / False", text: "Max's bed broke.", options: ["True", "False"], correctAns: "True", exp: "Giường của Max bị gãy." },
+      { type: "choice", sub: "B1. True / False", text: "The spaceship bed is the cheapest.", options: ["False", "True"], correctAns: "False", exp: "Giường phi thuyền đắt nhất (the most expensive)." },
+      { type: "choice", sub: "B2. Câu hỏi", text: "What is the solution for Max's bed?", options: ["Repair the old bed", "Buy the spaceship bed", "Buy the metal bed", "Sleep on the floor"], correctAns: "Repair the old bed", exp: "Cửa hàng sửa lại chiếc giường cũ." }
+    ],
+    partC: [
+      { type: "choice", sub: "C1. So sánh hơn", text: "This sofa is (more comfortable / comfortabler) than that one.", options: ["more comfortable", "comfortabler"], correctAns: "more comfortable", exp: "Tính từ dài dùng more + adj + than." },
+      { type: "choice", sub: "C1. So sánh nhất", text: "It's (the most / the more) expensive bed in the shop.", options: ["the most", "the more"], correctAns: "the most", exp: "So sánh nhất tính từ dài: the most expensive." },
+      { type: "choice", sub: "C4. Sửa lỗi sai", text: "Sửa lỗi: 'This bed is more expensive that that one.'", options: ["This bed is more expensive than that one.", "This bed is expensiver than that one.", "This bed is most expensive that that one."], correctAns: "This bed is more expensive than that one.", exp: "Dùng 'than' chứ không dùng 'that'." }
+    ]
+  },
+  "u6_l2": {
+    title: "Unit 6 - Tiết 11: Irregular comparatives & Phonics soft c/g",
+    partATitle: "A. Grammar: good/better/best, bad/worse/worst",
+    partBTitle: "B. Phonics: soft c (/s/) and soft g (/dʒ/)",
+    partCTitle: "C. Reading: In the furniture shop",
+    partA: [
+      { type: "choice", sub: "A1. So sánh bất quy tắc", text: "This cake is good, but that cake is ______.", options: ["better", "gooder", "the best"], correctAns: "better", exp: "good so sánh hơn là better." },
+      { type: "choice", sub: "A1. So sánh bất quy tắc", text: "Sunday was ______ day of the week. (good)", options: ["the best", "better", "the goodest"], correctAns: "the best", exp: "Ngày tuyệt nhất: the best." },
+      { type: "choice", sub: "A1. So sánh bất quy tắc", text: "My exam was bad, but yours was ______.", options: ["worse", "badder", "the worst"], correctAns: "worse", exp: "bad so sánh hơn là worse." },
+      { type: "choice", sub: "A1. So sánh bất quy tắc", text: "Wednesday was ______ day. (bad)", options: ["the worst", "worse", "the baddest"], correctAns: "the worst", exp: "Ngày tồi tệ nhất: the worst." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. Âm soft c", text: "Từ nào có c phát âm là /s/?", options: ["city", "cat", "cake", "camera"], correctAns: "city", exp: "c đứng trước i phát âm là /s/: city." },
+      { type: "choice", sub: "B1. Âm soft g", text: "Từ nào có g phát âm là /dʒ/?", options: ["giraffe", "goal", "game", "finger"], correctAns: "giraffe", exp: "g đứng trước i phát âm là /dʒ/: giraffe." }
+    ],
+    partC: [
+      {
+        passage: "Today I went to a furniture shop with my mum. We looked at three beds. The wooden bed was comfortable but expensive. The metal bed was cheaper than the wooden one, but it was hard. The modern bed was the most expensive and the best! It was soft and comfortable. We didn't buy it, but we repaired my old bed.",
+        type: "choice",
+        sub: "C1. Đọc hiểu",
+        text: "Which bed was cheaper than the wooden one?",
+        options: ["The metal bed", "The modern bed", "The old bed"],
+        correctAns: "The metal bed",
+        exp: "'The metal bed was cheaper than the wooden one.'"
+      },
+      {
+        passage: "Today I went to a furniture shop with my mum. We looked at three beds. The wooden bed was comfortable but expensive. The metal bed was cheaper than the wooden one, but it was hard. The modern bed was the most expensive and the best! It was soft and comfortable. We didn't buy it, but we repaired my old bed.",
+        type: "choice",
+        sub: "C1. True / False",
+        text: "The metal bed was soft.",
+        options: ["False", "True"],
+        correctAns: "False",
+        exp: "Giường kim loại bị cứng (it was hard)."
+      }
+    ]
+  },
+
+  // REVIEW 2
+  "rev2": {
+    title: "Tiết 12: Review 2 & Extensive reading (Sport)",
+    partATitle: "A. Vocabulary Review (Unit 4–6)",
+    partBTitle: "B. Grammar Review",
+    partCTitle: "C. Extensive Reading: American Football & Usain Bolt",
+    partA: [
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: yrhtpo →", correctAns: "trophy", exp: "trophy." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "You wear them on your feet to play sport:", options: ["trainers", "trophy", "racket", "ladder"], correctAns: "trainers", exp: "Giày thể thao: trainers." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. Đại từ sở hữu", text: "The red racket is (mine / my).", options: ["mine", "my"], correctAns: "mine", exp: "Đứng cuối câu dùng mine." },
+      { type: "choice", sub: "B1. Trạng từ", text: "He ran (slow / slowly).", options: ["slowly", "slow"], correctAns: "slowly", exp: "Bổ nghĩa cho động từ ran dùng trạng từ slowly." }
+    ],
+    partC: [
+      { type: "choice", sub: "C1. Extensive Reading", text: "Where did rugby start?", options: ["In England", "In America", "In Jamaica", "In France"], correctAns: "In England", exp: "Bóng bầu dục rugby bắt đầu ở nước Anh." },
+      { type: "choice", sub: "C1. Extensive Reading", text: "Did Usain Bolt win gold medals at Beijing Olympics?", options: ["Yes, he did", "No, he didn't"], correctAns: "Yes, he did", exp: "Usain Bolt đã giành 3 huy chương vàng tại Bắc Kinh." }
+    ]
+  },
+
+  // UNIT 7
+  "u7_l1": {
+    title: "Unit 7 - Tiết 13: Will it really happen? (Future with will/won't)",
+    partATitle: "A. Vocabulary (In space)",
+    partBTitle: "B. Story (Super-fast planes)",
+    partCTitle: "C. Grammar: The future with will / won't",
+    partA: [
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: atoatsrnu →", correctAns: "astronaut", exp: "Phi hành gia: astronaut." },
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: toerkc →", correctAns: "rocket", exp: "Tên lửa: rocket." },
+      { type: "input", sub: "A1. Xếp chữ", text: "Unscramble: saehppcsi →", correctAns: "spaceship", exp: "Tàu vũ trụ: spaceship." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "A person who travels in space:", options: ["astronaut", "waiter", "customer", "passenger"], correctAns: "astronaut", exp: "astronaut." },
+      { type: "choice", sub: "A3. Điền từ", text: "A ______ takes people into space.", options: ["rocket", "satellite", "programme", "traffic light"], correctAns: "rocket", exp: "rocket." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. True / False", text: "A super-fast plane will take less than five hours to fly to Australia.", options: ["True", "False"], correctAns: "True", exp: "Đúng theo bài khoá trang 52." },
+      { type: "choice", sub: "B1. True / False", text: "There are super-fast planes now.", options: ["False", "True"], correctAns: "False", exp: "Mẹ nói hiện tại chưa có loại máy bay này." },
+      { type: "choice", sub: "B2. Câu hỏi", text: "Can they go on a super-fast plane now?", options: ["No, not yet.", "Yes, they can.", "Tomorrow.", "Next week."], correctAns: "No, not yet.", exp: "'There aren't any planes like that yet.'" }
+    ],
+    partC: [
+      { type: "choice", sub: "C1. Chọn từ", text: "People (will / are) live on the moon.", options: ["will", "are"], correctAns: "will", exp: "will + V: sẽ sống." },
+      { type: "choice", sub: "C1. Chọn từ", text: "There (won't / not) be any cars.", options: ["won't", "not"], correctAns: "won't", exp: "Phủ định của will là won't." },
+      { type: "choice", sub: "C1. Chọn từ", text: "She (will go / will goes) tomorrow.", options: ["will go", "will goes"], correctAns: "will go", exp: "Sau will động từ giữ nguyên mẫu: will go." },
+      { type: "choice", sub: "C4. Sửa lỗi sai", text: "Sửa lỗi: 'People will to travel by rocket.'", options: ["People will travel by rocket.", "People will travelling by rocket.", "People travel will by rocket."], correctAns: "People will travel by rocket.", exp: "Không có 'to' sau will." }
+    ]
+  },
+  "u7_l2": {
+    title: "Unit 7 - Tiết 14: Future time markers & Phonics au/aw/or",
+    partATitle: "A. Grammar: Future time markers",
+    partBTitle: "B. Phonics: au, aw and or spellings",
+    partCTitle: "C. Reading: Life in 100 years' time",
+    partA: [
+      { type: "choice", sub: "A1. Dấu hiệu tương lai", text: "We will go on holiday ______ week.", options: ["next", "last", "yesterday"], correctAns: "next", exp: "next week." },
+      { type: "choice", sub: "A1. Dấu hiệu tương lai", text: "It's my birthday in two ______ time.", options: ["weeks'", "week", "weeks"], correctAns: "weeks'", exp: "in two weeks' time." },
+      { type: "choice", sub: "A1. Dấu hiệu tương lai", text: "I'll see you ______ Monday.", options: ["on", "at", "in"], correctAns: "on", exp: "on Monday." },
+      { type: "choice", sub: "A2. Viết câu", text: "we / on holiday / next week (go)", options: ["We will go on holiday next week.", "We go on holiday next week.", "We went on holiday next week."], correctAns: "We will go on holiday next week.", exp: "We will go on holiday next week." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. au, aw hay or?", text: "s__ce (nước sốt)", options: ["au", "aw", "or"], correctAns: "au", exp: "sauce." },
+      { type: "choice", sub: "B1. au, aw hay or?", text: "jig__ (tranh ghép hình)", options: ["aw", "au", "or"], correctAns: "aw", exp: "jigsaw." },
+      { type: "choice", sub: "B1. au, aw hay or?", text: "h__se (con ngựa)", options: ["or", "au", "aw"], correctAns: "or", exp: "horse." },
+      { type: "choice", sub: "B1. au, aw hay or?", text: "Aug__st (tháng 8)", options: ["u", "aw", "or"], correctAns: "u", exp: "August." }
+    ],
+    partC: [
+      {
+        passage: "In 100 years' time, life will be very different. Children will learn at home with computers, so they won't go to school. Robots will do the housework, but they won't have feelings. People will live longer and there will be more people on Earth. Cars won't use petrol; they will use energy from the sun. I think it will be exciting!",
+        type: "choice",
+        sub: "C1. Đọc hiểu",
+        text: "Will robots have feelings?",
+        options: ["No, they won't", "Yes, they will"],
+        correctAns: "No, they won't",
+        exp: "'they won't have feelings.'"
+      },
+      {
+        passage: "In 100 years' time, life will be very different. Children will learn at home with computers, so they won't go to school. Robots will do the housework, but they won't have feelings. People will live longer and there will be more people on Earth. Cars won't use petrol; they will use energy from the sun. I think it will be exciting!",
+        type: "choice",
+        sub: "C1. True / False",
+        text: "Cars will use petrol.",
+        options: ["False", "True"],
+        correctAns: "False",
+        exp: "'Cars won't use petrol; they will use energy from the sun.'"
+      }
+    ]
+  }
+};
+
+/* =========================================================
+   3. APP STATE & PERSISTENCE
+   ========================================================= */
+function shuffleArray(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+let state = {
+  activeLesson: "u2_l1",
+  lessons: COMPREHENSIVE_LESSONS,
+  students: OFFICIAL_STUDENTS,
+  pins: {},
+  scores: {},
+  locks: {},
+  currentQuiz: {
+    part: "",
+    index: 0,
+    scoreThisRun: 0,
+    questions: []
+  },
+  rankTab: "session"
+};
+
+function initApp() {
+  Confetti.init();
+
+  // Load PINs
+  const savedPins = localStorage.getItem("ff4_pins_full");
+  state.pins = savedPins ? JSON.parse(savedPins) : {};
+  state.students.forEach(s => {
+    if (!state.pins[s]) state.pins[s] = "0000";
+  });
+
+  // Load Scores
+  const savedScores = localStorage.getItem("ff4_scores_full");
+  state.scores = savedScores ? JSON.parse(savedScores) : {};
+  state.students.forEach(s => {
+    if (!state.scores[s]) state.scores[s] = { session: 0, month: 0, done: {} };
+  });
+
+  // Active Lesson
+  const savedLesson = localStorage.getItem("ff4_active_lesson_full");
+  if (savedLesson && state.lessons[savedLesson]) {
+    state.activeLesson = savedLesson;
+  } else {
+    state.activeLesson = "u2_l1";
+  }
+
+  // Locks
+  const savedLocks = localStorage.getItem("ff4_locks_full");
+  state.locks = savedLocks ? JSON.parse(savedLocks) : {};
+  Object.keys(state.lessons).forEach(lId => {
+    if (!state.locks[lId]) {
+      state.locks[lId] = { partA: false, partB: true, partC: true };
+    }
+  });
+
+  // Logged Student
+  const logged = localStorage.getItem("ff4_logged_student_full");
+  state.currentStudent = (logged && state.students.includes(logged)) ? logged : state.students[0];
+
+  renderLessonPicker();
+  updateUI();
+  renderLeaderboard();
+  renderTeacherPinList();
+  bindStaticEvents();
+}
+
+function saveState() {
+  localStorage.setItem("ff4_pins_full", JSON.stringify(state.pins));
+  localStorage.setItem("ff4_scores_full", JSON.stringify(state.scores));
+  localStorage.setItem("ff4_locks_full", JSON.stringify(state.locks));
+  localStorage.setItem("ff4_active_lesson_full", state.activeLesson);
+  localStorage.setItem("ff4_logged_student_full", state.currentStudent);
+}
+
+function renderLessonPicker() {
+  const sel = document.getElementById("active-lesson-selector");
+  sel.innerHTML = Object.keys(state.lessons).map(id => {
+    return `<option value="${id}" ${id === state.activeLesson ? "selected" : ""}>${state.lessons[id].title}</option>`;
+  }).join("");
+  document.getElementById("home-lesson-title").innerText = `${state.lessons[state.activeLesson].title} 🎯`;
+}
+
+function updateHeaderUser() {
+  document.getElementById("current-user-name").innerText = state.currentStudent;
+  const sData = state.scores[state.currentStudent] || { session: 0, month: 0, done: {} };
+  document.getElementById("student-score").innerText = `⭐ ${sData.session} XP`;
+}
+
+function updateUI() {
+  updateHeaderUser();
+  const currentL = state.lessons[state.activeLesson] || { partA: [], partB: [], partC: [] };
+  const sData = state.scores[state.currentStudent] || { session: 0, month: 0, done: {} };
+  const lessonLocks = state.locks[state.activeLesson] || { partA: false, partB: true, partC: true };
+
+  document.getElementById("title-partA").innerText = currentL.partATitle || "Phần A";
+  document.getElementById("title-partB").innerText = currentL.partBTitle || "Phần B";
+  document.getElementById("title-partC").innerText = currentL.partCTitle || "Phần C";
+
+  ["partA", "partB", "partC"].forEach(part => {
+    const list = currentL[part] || [];
+    document.getElementById(`count-${part}`).innerText = `${list.length} câu hỏi`;
+
+    const isLocked = lessonLocks[part];
+    const card = document.getElementById(`card-${part}`);
+    const badge = document.getElementById(`badge-${part}`);
+    const btn = document.getElementById(`btn-start-${part}`);
+
+    if (list.length === 0) {
+      card.classList.add("locked");
+      badge.className = "status-badge locked";
+      badge.innerText = "Chưa có bài";
+      btn.disabled = true;
+      btn.innerText = "Đang cập nhật...";
+      btn.className = "btn btn-outline";
+      return;
+    }
+
+    if (isLocked) {
+      card.classList.add("locked");
+      badge.className = "status-badge locked";
+      badge.innerText = "🔒 Đang khóa";
+      btn.disabled = true;
+      btn.innerText = "Chờ cô giáo mở khóa";
+      btn.className = "btn btn-outline";
+    } else {
+      card.classList.remove("locked");
+      const doneKey = `${state.activeLesson}_${part}`;
+      const done = sData.done && sData.done[doneKey];
+      badge.className = "status-badge unlocked";
+      badge.innerText = done ? "✅ Đã nộp bài" : "🔓 Đang mở";
+      btn.disabled = false;
+      btn.innerText = done ? "Làm lại nâng điểm 🚀" : "Làm Bài Ngay 🚀";
+      btn.className = "btn btn-primary";
+    }
+  });
+
+  document.getElementById("lock-partA").checked = !lessonLocks.partA;
+  document.getElementById("lock-partB").checked = !lessonLocks.partB;
+  document.getElementById("lock-partC").checked = !lessonLocks.partC;
+}
+
+/* =========================================================
+   4. EVENT BINDING & NAVIGATION
+   ========================================================= */
+function bindStaticEvents() {
+  document.getElementById("active-lesson-selector").addEventListener("change", (e) => {
+    state.activeLesson = e.target.value;
+    if (!state.locks[state.activeLesson]) {
+      state.locks[state.activeLesson] = { partA: false, partB: true, partC: true };
+    }
+    saveState();
+    renderLessonPicker();
+    updateUI();
+  });
+
+  document.getElementById("btn-open-login").addEventListener("click", openStudentLoginModal);
+  document.getElementById("btn-close-modal").addEventListener("click", closeStudentLoginModal);
+  document.getElementById("btn-confirm-login").addEventListener("click", confirmStudentLogin);
+
+  document.getElementById("btn-start-partA").addEventListener("click", () => startQuiz("partA"));
+  document.getElementById("btn-start-partB").addEventListener("click", () => startQuiz("partB"));
+  document.getElementById("btn-start-partC").addEventListener("click", () => startQuiz("partC"));
+
+  document.getElementById("nav-btn-home").addEventListener("click", () => navigate("home"));
+  document.getElementById("nav-btn-leaderboard").addEventListener("click", () => navigate("leaderboard"));
+  document.getElementById("nav-btn-teacher").addEventListener("click", () => navigate("teacher"));
+
+  document.getElementById("btn-rank-session").addEventListener("click", () => switchRankTab("session"));
+  document.getElementById("btn-rank-month").addEventListener("click", () => switchRankTab("month"));
+
+  document.getElementById("btn-submit-pin").addEventListener("click", unlockTeacher);
+  document.getElementById("btn-logout-teacher").addEventListener("click", lockTeacher);
+
+  document.getElementById("lock-partA").addEventListener("change", (e) => toggleLock("partA", e.target.checked));
+  document.getElementById("lock-partB").addEventListener("change", (e) => toggleLock("partB", e.target.checked));
+  document.getElementById("lock-partC").addEventListener("change", (e) => toggleLock("partC", e.target.checked));
+
+  document.getElementById("btn-reset-session").addEventListener("click", () => resetScores("session"));
+  document.getElementById("btn-reset-month").addEventListener("click", () => resetScores("month"));
+  document.getElementById("btn-backup-data").addEventListener("click", backupData);
+}
+
+function navigate(viewName) {
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+
+  if (viewName === "home") {
+    document.getElementById("view-home").classList.add("active");
+    document.getElementById("nav-btn-home").classList.add("active");
+    updateUI();
+  } else if (viewName === "leaderboard") {
+    document.getElementById("view-leaderboard").classList.add("active");
+    document.getElementById("nav-btn-leaderboard").classList.add("active");
+    renderLeaderboard();
+  } else if (viewName === "teacher") {
+    document.getElementById("view-teacher").classList.add("active");
+    document.getElementById("nav-btn-teacher").classList.add("active");
+  }
+}
+
+/* =========================================================
+   5. STUDENT LOGIN
+   ========================================================= */
+function openStudentLoginModal() {
+  const sel = document.getElementById("modal-select-student");
+  sel.innerHTML = state.students.map(s => `<option value="${s}" ${s === state.currentStudent ? "selected" : ""}>${s}</option>`).join("");
+  document.getElementById("modal-student-pin").value = "";
+  document.getElementById("modal-login").style.display = "flex";
+}
+
+function closeStudentLoginModal() {
+  document.getElementById("modal-login").style.display = "none";
+}
+
+function confirmStudentLogin() {
+  const chosen = document.getElementById("modal-select-student").value;
+  const pinInput = document.getElementById("modal-student-pin").value.trim();
+  const actualPin = state.pins[chosen] || "0000";
+
+  if (pinInput === actualPin) {
+    state.currentStudent = chosen;
+    saveState();
+    closeStudentLoginModal();
+    updateUI();
+    SoundFX.playSuccess();
+    alert(`Xin chào ${chosen}! Em đã đăng nhập thành công.`);
+  } else {
+    SoundFX.playWrong();
+    alert("Mã PIN chưa chính xác! Em hãy hỏi cô giáo nhé.");
+  }
+}
+
+/* =========================================================
+   6. QUIZ RUNNER & DETAILED FEEDBACK
+   ========================================================= */
+function startQuiz(part) {
+  const lessonLocks = state.locks[state.activeLesson] || {};
+  if (lessonLocks[part]) {
+    alert("Phần này đang bị khóa! Em chờ cô giáo mở khóa nhé.");
+    return;
+  }
+
+  const rawList = state.lessons[state.activeLesson][part] || [];
+  if (rawList.length === 0) {
+    alert("Phần này chưa có câu hỏi!");
+    return;
+  }
+
+  const cloned = rawList.map(q => {
+    const item = { ...q };
+    if (item.type === "choice") item.options = shuffleArray(item.options);
+    return item;
+  });
+
+  state.currentQuiz = {
+    part: part,
+    index: 0,
+    scoreThisRun: 0,
+    questions: shuffleArray(cloned)
+  };
+
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById("view-quiz").classList.add("active");
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const qList = state.currentQuiz.questions;
+  const qData = qList[state.currentQuiz.index];
+  const total = qList.length;
+  const currentIdx = state.currentQuiz.index + 1;
+
+  document.getElementById("quiz-part-name").innerText = `${state.lessons[state.activeLesson].title} - ${state.currentQuiz.part.toUpperCase()}`;
+  document.getElementById("quiz-counter").innerText = `Câu ${currentIdx}/${total}`;
+  document.getElementById("quiz-progress-bar").style.width = `${(currentIdx / total) * 100}%`;
+
+  const box = document.getElementById("quiz-body");
+  let html = `<div class="prompt-type">${qData.sub || "Câu hỏi"}</div>`;
+
+  if (qData.passage) {
+    html += `<div class="info-card">📖 <strong>Bài đọc:</strong><br>${qData.passage}</div>`;
+  }
+
+  html += `<div class="question-prompt">${qData.text}</div>`;
+
+  if (qData.type === "choice") {
+    html += `<div>`;
+    qData.options.forEach((opt, idx) => {
+      html += `<button class="option-btn" data-opt="${encodeURIComponent(opt)}">${opt} <span>➔</span></button>`;
+    });
+    html += `</div>`;
+  } else if (qData.type === "input") {
+    html += `
+      <input type="text" id="quiz-input-field" class="input-text" placeholder="Gõ câu trả lời vào đây..." autocomplete="off">
+      <button class="btn btn-primary" id="btn-submit-input">Gửi Câu Trả Lời 🚀</button>
+    `;
+  }
+
+  html += `<div id="explanation-container"></div>`;
+  box.innerHTML = html;
+
+  if (qData.type === "choice") {
+    box.querySelectorAll(".option-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const chosen = decodeURIComponent(btn.getAttribute("data-opt"));
+        handleChoiceAnswer(btn, chosen);
+      });
+    });
+  } else if (qData.type === "input") {
+    document.getElementById("btn-submit-input").addEventListener("click", handleInputAnswer);
+    document.getElementById("quiz-input-field").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") handleInputAnswer();
+    });
+  }
+}
+
+function handleChoiceAnswer(btnElement, selectedOption) {
+  const qData = state.currentQuiz.questions[state.currentQuiz.index];
+  const allBtns = document.querySelectorAll(".option-btn");
+  allBtns.forEach(b => b.style.pointerEvents = "none");
+
+  const isCorrect = (selectedOption.trim().toLowerCase() === qData.correctAns.trim().toLowerCase());
+
+  if (isCorrect) {
+    btnElement.classList.add("correct");
+    SoundFX.playSuccess();
+    Confetti.fire(35);
+    state.currentQuiz.scoreThisRun += 10;
+    setTimeout(nextQuestion, 700);
+  } else {
+    btnElement.classList.add("wrong");
+    SoundFX.playWrong();
+    allBtns.forEach(b => {
+      const val = decodeURIComponent(b.getAttribute("data-opt"));
+      if (val.trim().toLowerCase() === qData.correctAns.trim().toLowerCase()) {
+        b.classList.add("correct");
+      }
+    });
+    showExplanation(qData.correctAns, qData.exp);
+  }
+}
+
+function handleInputAnswer() {
+  const inputEl = document.getElementById("quiz-input-field");
+  const submitBtn = document.getElementById("btn-submit-input");
+  const userVal = inputEl.value.trim().toLowerCase();
+  const qData = state.currentQuiz.questions[state.currentQuiz.index];
+
+  if (!userVal) {
+    alert("Em hãy gõ đáp án trước nhé!");
+    return;
+  }
+
+  inputEl.disabled = true;
+  submitBtn.disabled = true;
+
+  if (userVal === qData.correctAns.trim().toLowerCase()) {
+    inputEl.style.borderColor = "var(--success)";
+    SoundFX.playSuccess();
+    Confetti.fire(35);
+    state.currentQuiz.scoreThisRun += 10;
+    setTimeout(nextQuestion, 700);
+  } else {
+    inputEl.style.borderColor = "var(--danger)";
+    SoundFX.playWrong();
+    showExplanation(qData.correctAns, qData.exp);
+  }
+}
+
+function showExplanation(correctAnswer, expText) {
+  const expBox = document.getElementById("explanation-container");
+  expBox.innerHTML = `
+    <div class="feedback-box wrong">
+      <div class="feedback-title">❌ Chưa chính xác rồi!</div>
+      <div><strong>Đáp án đúng:</strong> <span style="text-decoration: underline; font-weight:800;">${correctAnswer}</span></div>
+      <div style="margin-top: 4px; font-style: italic;"><strong>Giải thích:</strong> ${expText || "Hãy ghi nhớ kiến thức này nhé!"}</div>
+    </div>
+    <button class="btn btn-primary" id="btn-next-exp" style="margin-top: 14px;">Đã hiểu, sang câu tiếp theo ➔</button>
+  `;
+  document.getElementById("btn-next-exp").addEventListener("click", nextQuestion);
+}
+
+function nextQuestion() {
+  state.currentQuiz.index++;
+  const total = state.currentQuiz.questions.length;
+  if (state.currentQuiz.index < total) {
+    renderQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+function finishQuiz() {
+  const earned = state.currentQuiz.scoreThisRun;
+  const currentSt = state.scores[state.currentStudent];
+
+  currentSt.session += earned;
+  currentSt.month += earned;
+  if (!currentSt.done) currentSt.done = {};
+  currentSt.done[`${state.activeLesson}_${state.currentQuiz.part}`] = true;
+
+  saveState();
+  SoundFX.playWin();
+  Confetti.fire(90);
+
+  const box = document.getElementById("quiz-body");
+  box.innerHTML = `
+    <div style="text-align: center; padding: 20px 0;">
+      <div style="font-size: 55px; margin-bottom: 8px;">🎉</div>
+      <h3 style="font-size: 20px; margin-bottom: 6px;">Chúc Mừng ${state.currentStudent}!</h3>
+      <p style="font-size: 13px; color: var(--muted); margin-bottom: 12px;">Em đã hoàn thành bài tập của ${state.lessons[state.activeLesson].title}!</p>
+      <div style="font-size: 28px; font-weight: 900; color: var(--accent); margin-bottom: 18px;">+${earned} XP</div>
+      <button class="btn btn-primary" id="btn-finish-home">Trở Về Trang Chủ</button>
+      <button class="btn btn-outline" id="btn-finish-rank" style="margin-top: 8px;">Xem Bảng Vàng</button>
+    </div>
+  `;
+  document.getElementById("btn-finish-home").addEventListener("click", () => navigate("home"));
+  document.getElementById("btn-finish-rank").addEventListener("click", () => navigate("leaderboard"));
+}
+
+/* =========================================================
+   7. LEADERBOARD & TEACHER CONTROLS
+   ========================================================= */
+function switchRankTab(type) {
+  state.rankTab = type;
+  document.getElementById("btn-rank-session").style.background = type === "session" ? "var(--primary)" : "#e2e8f0";
+  document.getElementById("btn-rank-session").style.color = type === "session" ? "white" : "var(--text)";
+  document.getElementById("btn-rank-month").style.background = type === "month" ? "var(--primary)" : "#e2e8f0";
+  document.getElementById("btn-rank-month").style.color = type === "month" ? "white" : "var(--text)";
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  const sorted = [...state.students].sort((a, b) => {
+    const sA = state.scores[a] ? state.scores[a][state.rankTab] : 0;
+    const sB = state.scores[b] ? state.scores[b][state.rankTab] : 0;
+    return sB - sA;
+  });
+
+  const podiumArea = document.getElementById("podium-area");
+  const listArea = document.getElementById("ranking-list");
+
+  const top1 = sorted[0];
+  const top2 = sorted[1];
+  const top3 = sorted[2];
+
+  podiumArea.innerHTML = `
+    <div class="podium-slot rank-2">
+      <div class="podium-name">${top2 || "-"}</div>
+      <div style="font-size:11px; margin-bottom:4px; font-weight:800;">${top2 ? state.scores[top2][state.rankTab] : 0} XP</div>
+      <div class="podium-box">🥈 2nd</div>
+    </div>
+    <div class="podium-slot rank-1">
+      <div style="font-size: 16px;">👑</div>
+      <div class="podium-name">${top1 || "-"}</div>
+      <div style="font-size:11px; margin-bottom:4px; font-weight:800;">${top1 ? state.scores[top1][state.rankTab] : 0} XP</div>
+      <div class="podium-box">🥇 1st</div>
+    </div>
+    <div class="podium-slot rank-3">
+      <div class="podium-name">${top3 || "-"}</div>
+      <div style="font-size:11px; margin-bottom:4px; font-weight:800;">${top3 ? state.scores[top3][state.rankTab] : 0} XP</div>
+      <div class="podium-box">🥉 3rd</div>
+    </div>
+  `;
+
+  let listHtml = "";
+  for (let i = 3; i < sorted.length; i++) {
+    const sName = sorted[i];
+    const sScore = state.scores[sName] ? state.scores[sName][state.rankTab] : 0;
+    listHtml += `
+      <div class="rank-row">
+        <div class="rank-left">
+          <div class="rank-idx">${i + 1}</div>
+          <span>${sName}</span>
+        </div>
+        <div style="font-weight: 800; color: var(--primary);">${sScore} XP</div>
+      </div>
+    `;
+  }
+  listArea.innerHTML = listHtml;
+}
+
+function unlockTeacher() {
+  const pin = document.getElementById("teacher-pin").value;
+  // Mã PIN bảo mật mới của giáo viên
+  if (pin === "260260") {
+    document.getElementById("teacher-auth").style.display = "none";
+    document.getElementById("teacher-controls").style.display = "block";
+    renderTeacherPinList();
+    updateUI();
+  } else {
+    alert("Mã PIN quản trị không chính xác!");
+  }
+}
+
+function lockTeacher() {
+  document.getElementById("teacher-auth").style.display = "block";
+  document.getElementById("teacher-controls").style.display = "none";
+  document.getElementById("teacher-pin").value = "";
+  navigate("home");
+}
+
+function toggleLock(part, isUnlocked) {
+  if (!state.locks[state.activeLesson]) state.locks[state.activeLesson] = {};
+  state.locks[state.activeLesson][part] = !isUnlocked;
+  saveState();
+  updateUI();
+}
+
+function backupData() {
+  const data = {
+    lessons: state.lessons,
+    students: state.students,
+    pins: state.pins,
+    scores: state.scores
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `FF4_Data_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+}
+
+function renderTeacherPinList() {
+  const container = document.getElementById("teacher-pin-list");
+  if (!container) return;
+  let html = "";
+  state.students.forEach(s => {
+    const pin = state.pins[s] || "0000";
+    html += `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid #e2e8f0; font-size:13px;">
+        <span style="font-weight:800;">${s}</span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span>PIN: <strong style="color:var(--primary);">${pin}</strong></span>
+          <button class="btn-change-pin" data-st="${s}" style="padding:2px 8px; border-radius:6px; border:1px solid #cbd5e1; background:white; font-size:11px; cursor:pointer;">Đổi</button>
+        </div>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+
+  container.querySelectorAll(".btn-change-pin").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const sName = btn.getAttribute("data-st");
+      const current = state.pins[sName] || "0000";
+      const newPin = prompt(`Nhập PIN mới cho học sinh ${sName}:`, current);
+      if (newPin && newPin.trim() !== "") {
+        state.pins[sName] = newPin.trim();
+        saveState();
+        renderTeacherPinList();
+        alert(`Đã đổi PIN của ${sName} thành: ${newPin.trim()}`);
+      }
+    });
+  });
+}
+
+function resetScores(type) {
+  const msg = type === "session"
+    ? "Cô có chắc muốn Reset ĐIỂM BUỔI NÀY về 0 để mở buổi mới?"
+    : "Cô có chắc muốn Reset BẢNG VÀNG THÁNG về 0?";
+
+  if (confirm(msg)) {
+    state.students.forEach(s => {
+      if (state.scores[s]) {
+        state.scores[s][type] = 0;
+        if (type === "session") state.scores[s].done = {};
+      }
+    });
+    saveState();
+    renderLeaderboard();
+    updateUI();
+    alert("Đã reset điểm thành công!");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", initApp);
+</script>
+</body>
+</html>
