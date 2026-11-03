@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>FF4 Champion Arena - Unit 1 & Unit 2 Full Trắc Nghiệm</title>
+  <title>FF4 Champion Arena - Chuẩn Hóa Cấu Trúc A-10 B-10 C-15</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -117,16 +117,6 @@
       font-size: 12px;
       font-weight: 800;
       cursor: pointer;
-    }
-
-    .cloud-status {
-      font-size: 11px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-top: 6px;
-      color: rgba(255,255,255,0.95);
-      font-weight: 700;
     }
 
     .view { display: none; padding: 18px; }
@@ -408,16 +398,13 @@
       <span>👤 <span id="current-user-name">Đang tải...</span></span>
       <button class="btn-switch-user" id="btn-open-login">Đổi Học Sinh</button>
     </div>
-    <div class="cloud-status" id="cloud-status-text">
-      <span>☁️ Đang kết nối máy chủ Bảng Vàng...</span>
-    </div>
   </header>
 
   <!-- HOME VIEW -->
   <div id="view-home" class="view active">
     <div style="margin-bottom: 14px;">
       <h2 style="font-size: 18px; font-weight: 900;" id="home-lesson-title">Đang tải bài tập... 🎯</h2>
-      <p style="font-size: 13px; color: var(--muted);">Chuẩn hoá trắc nghiệm: A (10 câu) - B (10 câu) - C (15 câu)</p>
+      <p style="font-size: 13px; color: var(--muted);">Cấu trúc chuẩn: Phần A (10 câu) - Phần B (10 câu) - Phần C (15 câu)</p>
     </div>
 
     <div class="section-card" id="card-partA">
@@ -471,7 +458,7 @@
   <!-- LEADERBOARD VIEW -->
   <div id="view-leaderboard" class="view">
     <div style="text-align: center; margin-bottom: 12px;">
-      <h2 style="font-size: 19px; font-weight: 900;">Bảng Vàng Toàn Lớp (Đồng Bộ Đám Mây) 🏆</h2>
+      <h2 style="font-size: 19px; font-weight: 900;">Bảng Vàng Thi Đua 🏆</h2>
       <div style="display: flex; justify-content: center; gap: 8px; margin-top: 10px;">
         <button class="badge" id="btn-rank-session" style="cursor:pointer; border:none; background:var(--primary); color:white;">Buổi Này</button>
         <button class="badge" id="btn-rank-month" style="cursor:pointer; border:none; background:#e2e8f0; color:var(--text);">Bảng Vàng Tháng</button>
@@ -574,70 +561,8 @@
 </div>
 
 <script>
-/* =========================================================================
-   CẤU HÌNH CLOUD ĐỒNG BỘ BẢNG VÀNG
-   ========================================================================= */
-const FIREBASE_DB_URL = "https://ff4-arena-class-default-rtdb.firebaseio.com"; 
-
-const CloudManager = {
-  isBusy: false,
-  async fetchGlobalScores() {
-    try {
-      document.getElementById("cloud-status-text").innerHTML = "<span>🔄 Đang đồng bộ Bảng Vàng toàn lớp...</span>";
-      const response = await fetch(`${FIREBASE_DB_URL}/ff4_data.json`);
-      if (response.ok) {
-        const cloudData = await response.json();
-        if (cloudData && cloudData.scores) {
-          state.students.forEach(s => {
-            if (cloudData.scores[s]) {
-              state.scores[s] = {
-                session: Math.max(state.scores[s]?.session || 0, cloudData.scores[s].session || 0),
-                month: Math.max(state.scores[s]?.month || 0, cloudData.scores[s].month || 0),
-                done: { ...(state.scores[s]?.done || {}), ...(cloudData.scores[s].done || {}) }
-              };
-            }
-          });
-          if (cloudData.locks) state.locks = { ...state.locks, ...cloudData.locks };
-          if (cloudData.pins) state.pins = { ...state.pins, ...cloudData.pins };
-          
-          saveLocalState();
-          updateUI();
-          renderLeaderboard();
-        }
-        document.getElementById("cloud-status-text").innerHTML = "<span>✅ Đã kết nối Đám mây: Tất cả học sinh chung Bảng Vàng</span>";
-      }
-    } catch(err) {
-      document.getElementById("cloud-status-text").innerHTML = "<span>⚡ Chế độ lưu trữ thiết bị</span>";
-    }
-  },
-
-  async pushGlobalScores() {
-    if (this.isBusy) return;
-    this.isBusy = true;
-    try {
-      document.getElementById("cloud-status-text").innerHTML = "<span>☁️ Đang cập nhật điểm lên Bảng Vàng chung...</span>";
-      const payload = {
-        scores: state.scores,
-        locks: state.locks,
-        pins: state.pins,
-        updatedAt: new Date().toISOString()
-      };
-      await fetch(`${FIREBASE_DB_URL}/ff4_data.json`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      document.getElementById("cloud-status-text").innerHTML = "<span>✅ Điểm số đã đồng bộ tới toàn thể lớp học!</span>";
-    } catch(err) {
-      document.getElementById("cloud-status-text").innerHTML = "<span>⚠️ Đang lưu tạm trên máy</span>";
-    } finally {
-      this.isBusy = false;
-    }
-  }
-};
-
 /* =========================================================
-   SOUND FX & CONFETTI
+   1. SOUND FX & CONFETTI ENGINE
    ========================================================= */
 const SoundFX = {
   ctx: null,
@@ -776,8 +701,7 @@ const Confetti = {
 window.addEventListener("resize", () => Confetti.resize());
 
 /* =========================================================
-   DANH SÁCH 18 HỌC SINH VÀ NGÂN HÀNG CÂU HỎI TRẮC NGHIỆM CHUẨN:
-   A: 10 CÂU - B: 10 CÂU - C: 15 CÂU
+   2. 18 HỌC SINH VÀ NGÂN HÀNG CÂU HỎI CHUẨN: A (10) - B (10) - C (15)
    ========================================================= */
 const OFFICIAL_STUDENTS = [
   "Minh An", "Chiếp", "Bảo Long", "Đức Vinh", "Hồng Đạt", 
@@ -791,168 +715,217 @@ const COMPREHENSIVE_LESSONS = {
   "u1_l1": {
     title: "Unit 1 - Tiết 1: The restaurant",
     partATitle: "A. Vocabulary (10 câu)",
-    partBTitle: "B. Story (10 câu)",
-    partCTitle: "C. Grammar (15 câu)",
+    partBTitle: "B. Story & Comprehension (10 câu)",
+    partCTitle: "C. Grammar: Calendar vs Camera (15 câu)",
     partA: [
-      { type: "choice", sub: "A. Vocabulary", text: "1. A man who brings food in a restaurant is a ___.", options: ["waiter", "waitress", "customer", "uniform"], correctAns: "waiter", exp: "1. C (waiter) - Nam phục vụ." },
-      { type: "choice", sub: "A. Vocabulary", text: "2. A woman who brings food in a restaurant is a ___.", options: ["waitress", "waiter", "customer", "menu"], correctAns: "waitress", exp: "2. B (waitress) - Nữ phục vụ." },
-      { type: "choice", sub: "A. Vocabulary", text: "3. People wear a ___ at work or at school.", options: ["uniform", "menu", "customer", "bowl"], correctAns: "uniform", exp: "3. A (uniform) - Đồng phục." },
-      { type: "choice", sub: "A. Vocabulary", text: "4. You read the ___ to choose your food.", options: ["menu", "uniform", "waiter", "bottle"], correctAns: "menu", exp: "4. D (menu) - Thực đơn." },
-      { type: "choice", sub: "A. Vocabulary", text: "5. A person who buys food in a restaurant is a ___.", options: ["customer", "waiter", "waitress", "uniform"], correctAns: "customer", exp: "5. C (customer) - Khách hàng." },
-      { type: "choice", sub: "A. Vocabulary", text: "6. You can carry a ___ of water in your bag.", options: ["bottle", "bowl", "plate", "fork"], correctAns: "bottle", exp: "6. B (bottle) - Chai nước." },
-      { type: "choice", sub: "A. Vocabulary", text: "7. My dad drinks a ___ of coffee every morning.", options: ["cup", "plate", "bowl", "bottle"], correctAns: "cup", exp: "7. A (cup) - Tách cà phê." },
-      { type: "choice", sub: "A. Vocabulary", text: "8. Can I have a ___ of milk, please?", options: ["glass", "plate", "bowl", "fork"], correctAns: "glass", exp: "8. D (glass) - Ly sữa." },
-      { type: "choice", sub: "A. Vocabulary", text: "9. She is eating a ___ of soup.", options: ["bowl", "plate", "bottle", "fork"], correctAns: "bowl", exp: "9. C (bowl) - Bát/tô súp." },
-      { type: "choice", sub: "A. Vocabulary", text: "10. Here is a ___ of salad for you.", options: ["plate", "bottle", "glass", "cup"], correctAns: "plate", exp: "10. B (plate) - Đĩa salad." }
+      { type: "choice", sub: "A1. Meaning", text: "What is a 'waiter'?", options: ["a man who brings food in a restaurant", "a list of food", "a woman who brings food", "special clothes"], correctAns: "a man who brings food in a restaurant", exp: "Waiter là nam bồi bàn." },
+      { type: "choice", sub: "A1. Meaning", text: "What is a 'menu'?", options: ["a list of food in a restaurant", "a customer", "a waiter", "a uniform"], correctAns: "a list of food in a restaurant", exp: "Menu là thực đơn." },
+      { type: "choice", sub: "A1. Meaning", text: "What is a 'uniform'?", options: ["special clothes for work or school", "a restaurant", "a glass of milk", "a menu"], correctAns: "special clothes for work or school", exp: "Uniform là đồng phục." },
+      { type: "choice", sub: "A1. Meaning", text: "What is a 'customer'?", options: ["a person who buys food in a restaurant", "a man who brings food", "a list of food", "a chef"], correctAns: "a person who buys food in a restaurant", exp: "Customer là thực khách, người mua đồ ăn." },
+      { type: "choice", sub: "A1. Meaning", text: "What is a 'waitress'?", options: ["a woman who brings food in a restaurant", "a man who brings food", "special clothes", "a customer"], correctAns: "a woman who brings food in a restaurant", exp: "Waitress có đuôi -ess chỉ phụ nữ (nữ phục vụ)." },
+      { type: "choice", sub: "A2. Containers", text: "My dad drinks a ________ of coffee every morning.", options: ["cup", "bottle", "bowl", "plate"], correctAns: "cup", exp: "Tách cà phê: a cup of coffee." },
+      { type: "choice", sub: "A2. Containers", text: "Can I have a ________ of milk, please?", options: ["glass", "plate", "bowl", "cup"], correctAns: "glass", exp: "Ly sữa: a glass of milk." },
+      { type: "choice", sub: "A2. Containers", text: "She is eating a ________ of soup.", options: ["bowl", "bottle", "plate", "cup"], correctAns: "bowl", exp: "Tô súp: a bowl of soup." },
+      { type: "choice", sub: "A2. Containers", text: "Here is a ________ of salad for you.", options: ["plate", "cup", "bottle", "glass"], correctAns: "plate", exp: "Đĩa xà lách: a plate of salad." },
+      { type: "choice", sub: "A2. Containers", text: "We need a ________ of water for the picnic.", options: ["bottle", "bowl", "plate", "cup"], correctAns: "bottle", exp: "Chai nước: a bottle of water." }
     ],
     partB: [
-      { type: "choice", sub: "B. Story", text: "1. Max says 'We often come to this restaurant.' He thinks it is ___.", options: ["Ken's Café", "The Pizza Place", "a school", "a cinema"], correctAns: "Ken's Café", exp: "21. C (Ken's Café) - Max tưởng đó là quán quen Ken's Café." },
-      { type: "choice", sub: "B. Story", text: "2. What are the waiters wearing today?", options: ["green uniforms", "blue uniforms", "white uniforms", "red uniforms"], correctAns: "green uniforms", exp: "22. B (green uniforms) - Hôm nay họ mặc đồng phục xanh lá." },
-      { type: "choice", sub: "B. Story", text: "3. What colour are the waiters' uniforms usually?", options: ["blue", "green", "red", "white"], correctAns: "blue", exp: "23. A (blue) - Bình thường mặc màu xanh dương." },
-      { type: "choice", sub: "B. Story", text: "4. What does Dad want to eat?", options: ["a bowl of pasta and some salad", "pizza and ice cream", "soup and bread", "a burger"], correctAns: "a bowl of pasta and some salad", exp: "24. D (a bowl of pasta and some salad)." },
-      { type: "choice", sub: "B. Story", text: "5. What does the waiter say about pasta?", options: ["They haven't got any", "They have a lot", "It is free", "It is cold"], correctAns: "They haven't got any", exp: "25. C (They haven't got any) - Quán pizza không có mì." },
-      { type: "choice", sub: "B. Story", text: "6. What is on the menu?", options: ["a selection of pizzas", "a selection of burgers", "only soup", "only ice cream"], correctAns: "a selection of pizzas", exp: "26. B (a selection of pizzas) - Danh sách các loại pizza." },
-      { type: "choice", sub: "B. Story", text: "7. Who says 'You usually have pasta'?", options: ["Holly", "Max", "Dad", "the waiter"], correctAns: "Holly", exp: "27. A (Holly) - Holly nói câu này." },
-      { type: "choice", sub: "B. Story", text: "8. Why is the waiter surprised?", options: ["They are the first customers", "They are late", "They are noisy", "They are children"], correctAns: "They are the first customers", exp: "28. D (They are the first customers)." },
-      { type: "choice", sub: "B. Story", text: "9. Where is Ken's Café?", options: ["next door", "across the road", "in a school", "far away"], correctAns: "next door", exp: "29. C (next door) - Quán Ken's Café ở ngay bên cạnh." },
-      { type: "choice", sub: "B. Story", text: "10. What do the family get for free?", options: ["ice creams", "pizzas", "pasta", "coffee"], correctAns: "ice creams", exp: "31. A (ice creams) - Được tặng kem miễn phí." }
+      { type: "choice", sub: "B1. True / False", text: "1. The waiters usually wear blue uniforms.", options: ["True", "False"], correctAns: "True", exp: "Trong bài: 'They usually wear blue uniforms.'" },
+      { type: "choice", sub: "B1. True / False", text: "2. The waiters are wearing red today.", options: ["False", "True"], correctAns: "False", exp: "Hôm nay họ mặc màu xanh lá (green)." },
+      { type: "choice", sub: "B1. True / False", text: "3. Max's family are in Ken's Café.", options: ["False", "True"], correctAns: "False", exp: "Họ đang ở The Pizza Place. Ken's Café ở bên cạnh." },
+      { type: "choice", sub: "B1. True / False", text: "4. The Pizza Place has a lot of pasta today.", options: ["False", "True"], correctAns: "False", exp: "Quán không có pasta: 'Sorry, we haven't got any pasta.'" },
+      { type: "choice", sub: "B1. True / False", text: "5. The family get free ice creams.", options: ["True", "False"], correctAns: "True", exp: "Khách mở hàng được tặng: 'Have free ice creams!'" },
+      { type: "choice", sub: "B2. Questions", text: "6. What do Max's family usually have when they visit?", options: ["They usually have pasta.", "They usually have pizza.", "They usually have salad.", "They usually have ice cream."], correctAns: "They usually have pasta.", exp: "Holly nói: 'You usually have pasta.'" },
+      { type: "choice", sub: "B2. Questions", text: "7. Where is Ken's Café located?", options: ["Next door to The Pizza Place.", "Opposite the park.", "In Australia.", "At the airport."], correctAns: "Next door to The Pizza Place.", exp: "Bồi bàn nói: 'Ken's Café is next door.'" },
+      { type: "choice", sub: "B2. Questions", text: "8. Why do the family get free ice creams?", options: ["Because they are the first customers.", "Because it's a birthday.", "Because they ordered pasta.", "Because they were early."], correctAns: "Because they are the first customers.", exp: "'You're our first customers. Have free ice creams!'" },
+      { type: "input", sub: "B3. Unscramble", text: "9. Unscramble: iwtrea →", correctAns: "waiter", exp: "Từ đúng: waiter." },
+      { type: "input", sub: "B3. Unscramble", text: "10. Unscramble: nmue →", correctAns: "menu", exp: "Từ đúng: menu." }
     ],
     partC: [
-      { type: "choice", sub: "C. Grammar", text: "1. They usually ___ blue uniforms.", options: ["wear", "are wearing", "wears", "wearing"], correctAns: "wear", exp: "36. D (wear) - usually chia hiện tại đơn." },
-      { type: "choice", sub: "C. Grammar", text: "2. Today they ___ white uniforms.", options: ["are wearing", "wear", "wears", "wearing"], correctAns: "are wearing", exp: "37. C (are wearing) - today chia hiện tại tiếp diễn." },
-      { type: "choice", sub: "C. Grammar", text: "3. We usually ___ pasta.", options: ["have", "are having", "has", "having"], correctAns: "have", exp: "38. B (have) - We usually have." },
-      { type: "choice", sub: "C. Grammar", text: "4. But today we ___ pizza.", options: ["are having", "have", "has", "having"], correctAns: "are having", exp: "39. A (are having) - but today we are having." },
-      { type: "choice", sub: "C. Grammar", text: "5. She ___ a glass of water now.", options: ["is drinking", "drinks", "drink", "drinking"], correctAns: "is drinking", exp: "40. D (is drinking) - now chia tiếp diễn." },
-      { type: "choice", sub: "C. Grammar", text: "6. The family ___ by the door today.", options: ["are sitting", "sit", "sits", "is sit"], correctAns: "are sitting", exp: "41. C (are sitting) - The family số nhiều hành động hôm nay." },
-      { type: "choice", sub: "C. Grammar", text: "7. He never ___ soup for dinner.", options: ["has", "is having", "have", "having"], correctAns: "has", exp: "42. B (has) - He never has." },
-      { type: "choice", sub: "C. Grammar", text: "8. I always ___ breakfast at seven.", options: ["have", "am having", "has", "having"], correctAns: "have", exp: "43. A (have) - I always have." },
-      { type: "choice", sub: "C. Grammar", text: "9. Look! The waiter ___ a tray.", options: ["is carrying", "carries", "carry", "carrying"], correctAns: "is carrying", exp: "44. D (is carrying) - Look! hành động đang diễn ra." },
-      { type: "choice", sub: "C. Grammar", text: "10. Which word shows a habit?", options: ["usually", "now", "today", "at the moment"], correctAns: "usually", exp: "45. C (usually) - Dấu hiệu thói quen (Calendar)." },
-      { type: "choice", sub: "C. Grammar", text: "11. Which word shows 'happening now'?", options: ["right now", "always", "never", "sometimes"], correctAns: "right now", exp: "46. B (right now) - Dấu hiệu đang diễn ra (Camera)." },
-      { type: "choice", sub: "C. Grammar", text: "12. Which sentence is correct?", options: ["She is having a bowl of soup at the moment.", "She have a bowl of soup at the moment.", "She having a bowl of soup at the moment.", "She has having soup at the moment."], correctAns: "She is having a bowl of soup at the moment.", exp: "47. A - Đúng cấu trúc thì hiện tại tiếp diễn." },
-      { type: "choice", sub: "C. Grammar", text: "13. sit + -ing = ___", options: ["sitting", "siting", "sitteng", "sittin"], correctAns: "sitting", exp: "48. D (sitting) - Gấp đôi phụ âm t." },
-      { type: "choice", sub: "C. Grammar", text: "14. have + -ing = ___", options: ["having", "haveing", "haveng", "havin"], correctAns: "having", exp: "49. C (having) - Bỏ e thêm ing." },
-      { type: "choice", sub: "C. Grammar", text: "15. My mum ___ coffee every morning.", options: ["drinks", "is drinking", "drink", "drinking"], correctAns: "drinks", exp: "50. B (drinks) - every morning chia hiện tại đơn ngôi 3 số ít." }
+      { type: "choice", sub: "C1. Calendar vs Camera", text: "1. They usually (wear / are wearing) blue uniforms.", options: ["wear", "are wearing"], correctAns: "wear", exp: "usually chỉ thói quen → wear." },
+      { type: "choice", sub: "C1. Calendar vs Camera", text: "2. Today the waiter (carries / is carrying) a tray.", options: ["is carrying", "carries"], correctAns: "is carrying", exp: "today chỉ hiện tại tiếp diễn → is carrying." },
+      { type: "choice", sub: "C1. Calendar vs Camera", text: "3. My mum (cooks / is cooking) noodles every Sunday.", options: ["cooks", "is cooking"], correctAns: "cooks", exp: "every Sunday chia thì hiện tại đơn: cooks." },
+      { type: "choice", sub: "C1. Calendar vs Camera", text: "4. We (have / are having) pizza right now.", options: ["are having", "have"], correctAns: "are having", exp: "right now dùng hiện tại tiếp diễn: are having." },
+      { type: "choice", sub: "C1. Calendar vs Camera", text: "5. He never (drinks / is drinking) coffee.", options: ["drinks", "is drinking"], correctAns: "drinks", exp: "never chỉ thói quen → drinks." },
+      { type: "choice", sub: "C1. Calendar vs Camera", text: "6. Look! The customers (sit / are sitting) by the window.", options: ["are sitting", "sit"], correctAns: "are sitting", exp: "Look! hành động đang diễn ra: are sitting." },
+      { type: "choice", sub: "C1. Calendar vs Camera", text: "7. She (has / is having) a bowl of soup at the moment.", options: ["is having", "has"], correctAns: "is having", exp: "at the moment dùng tiếp diễn: is having." },
+      { type: "choice", sub: "C1. Calendar vs Camera", text: "8. I always (eat / am eating) breakfast at 6.30.", options: ["eat", "am eating"], correctAns: "eat", exp: "always chỉ thói quen lặp lại → eat." },
+      { type: "input", sub: "C2. Verb Form", text: "9. Mai usually _________ (drink) milk.", correctAns: "drinks", exp: "Mai (ngôi 3 số ít) thêm -s: drinks." },
+      { type: "input", sub: "C2. Verb Form", text: "10. ...but today she _________ (drink) juice.", correctAns: "is drinking", exp: "today dùng is drinking." },
+      { type: "input", sub: "C2. Verb Form", text: "11. We often _________ (go) to Ken's Café.", correctAns: "go", exp: "We đi với go nguyên mẫu." },
+      { type: "input", sub: "C3. Spelling -ing", text: "12. Write -ing form of sit: →", correctAns: "sitting", exp: "Gấp đôi 't': sitting." },
+      { type: "input", sub: "C3. Spelling -ing", text: "13. Write -ing form of have: →", correctAns: "having", exp: "Bỏ 'e' thêm -ing: having." },
+      { type: "choice", sub: "C4. Error Correction", text: "14. Sửa câu: 'She is wear a blue uniform today.'", options: ["She is wearing a blue uniform today.", "She are wearing a blue uniform today.", "She wears a blue uniform today."], correctAns: "She is wearing a blue uniform today.", exp: "Sau is dùng V-ing: is wearing." },
+      { type: "choice", sub: "C4. Error Correction", text: "15. Sửa câu: 'My sister always is late.'", options: ["My sister is always late.", "My sister is late always.", "My sister always late."], correctAns: "My sister is always late.", exp: "Trạng từ tần suất đứng sau To Be: is always late." }
     ]
   },
 
   // UNIT 1 - TIẾT 2
   "u1_l2": {
-    title: "Unit 1 - Tiết 2: Time markers & Skills",
-    partATitle: "A. Phonics & Vocabulary (10 câu)",
-    partBTitle: "B. Reading: Breakfast Time (10 câu)",
-    partCTitle: "C. Grammar: Time markers (15 câu)",
+    title: "Unit 1 - Tiết 2: Time Markers & Phonics",
+    partATitle: "A. Grammar: Time Markers (10 câu)",
+    partBTitle: "B. Phonics: Long a & Long e (10 câu)",
+    partCTitle: "C. Reading: Ben's Sunday breakfast (15 câu)",
     partA: [
-      { type: "choice", sub: "A. Phonics", text: "1. Which word has a long a /eɪ/ sound?", options: ["train", "tree", "key", "leaves"], correctAns: "train", exp: "1. D (train) - Phát âm là /eɪ/." },
-      { type: "choice", sub: "A. Phonics", text: "2. Which word has a long e /iː/ sound?", options: ["tree", "tray", "cake", "train"], correctAns: "tree", exp: "2. C (tree) - Phát âm là /iː/." },
-      { type: "choice", sub: "A. Phonics", text: "3. Which word has the same vowel sound as 'cake'?", options: ["rain", "tree", "leaves", "key"], correctAns: "rain", exp: "3. B (rain) - Cùng âm /eɪ/ với cake." },
-      { type: "choice", sub: "A. Phonics", text: "4. Which word has the same vowel sound as 'key'?", options: ["leaves", "tray", "cake", "train"], correctAns: "leaves", exp: "4. A (leaves) - Cùng âm /iː/ với key." },
-      { type: "choice", sub: "A. Phonics", text: "5. Which word is the odd one out?", options: ["tree", "train", "tray", "play"], correctAns: "tree", exp: "5. D (tree) - tree là âm /iː/, còn lại là /eɪ/." },
-      { type: "choice", sub: "A. Phonics", text: "6. Which word is the odd one out?", options: ["peas", "cake", "day", "rain"], correctAns: "peas", exp: "6. C (peas) - peas là âm /iː/." },
-      { type: "choice", sub: "A. Phonics", text: "7. Which word is the odd one out?", options: ["playing", "eating", "seeing", "dreaming"], correctAns: "playing", exp: "7. B (playing) - playing là âm /eɪ/." },
-      { type: "choice", sub: "A. Vocabulary", text: "8. 'Toast' is ___.", options: ["bread cooked until it is brown", "a kind of rice", "a kind of oil", "a kind of soup"], correctAns: "bread cooked until it is brown", exp: "11. B - Bánh mì nướng giòn." },
-      { type: "choice", sub: "A. Vocabulary", text: "9. 'Noodles' are ___.", options: ["long thin pasta-like food", "a kind of fruit", "a drink", "a kind of fish"], correctAns: "long thin pasta-like food", exp: "12. A - Mì sợi." },
-      { type: "choice", sub: "A. Vocabulary", text: "10. 'Chilli' tastes ___.", options: ["hot", "sweet", "cold", "sour"], correctAns: "hot", exp: "17. D (hot) - Vị cay nồng." }
+      { type: "choice", sub: "A1. Trật tự từ", text: "1. Sắp xếp: always / I / breakfast / have", options: ["I always have breakfast.", "I have always breakfast.", "Always I have breakfast."], correctAns: "I always have breakfast.", exp: "Trạng từ tần suất đứng trước động từ thường." },
+      { type: "choice", sub: "A1. Trật tự từ", text: "2. Sắp xếp: is / never / He / late", options: ["He is never late.", "He never is late.", "Late is he never."], correctAns: "He is never late.", exp: "Trạng từ tần suất đứng sau To Be: is never late." },
+      { type: "choice", sub: "A1. Trật tự từ", text: "3. Sắp xếp: rarely / eats / fish / My brother", options: ["My brother rarely eats fish.", "My brother eats rarely fish.", "Rarely eats my brother fish."], correctAns: "My brother rarely eats fish.", exp: "rarely đứng trước eats." },
+      { type: "choice", sub: "A1. Trật tự từ", text: "4. Sắp xếp: usually / are / at home / We / on Sundays", options: ["We are usually at home on Sundays.", "We usually are at home on Sundays.", "On Sundays usually are we at home."], correctAns: "We are usually at home on Sundays.", exp: "usually đứng sau are." },
+      { type: "choice", sub: "A2. Bảng tần suất", text: "5. Nam: ●●●● (100%) - drink milk", options: ["Nam always drinks milk.", "Nam never drinks milk.", "Nam usually drinks milk."], correctAns: "Nam always drinks milk.", exp: "●●●● biểu thị 100% tần suất: always." },
+      { type: "choice", sub: "A2. Bảng tần suất", text: "6. Nam: ●●●○ (75%) - eat rice", options: ["Nam usually eats rice.", "Nam always eats rice.", "Nam rarely eats rice."], correctAns: "Nam usually eats rice.", exp: "●●●○ là usually." },
+      { type: "choice", sub: "A2. Bảng tần suất", text: "7. Nam: ○○○○ (0%) - eat fish", options: ["Nam never eats fish.", "Nam always eats fish.", "Nam usually eats fish."], correctAns: "Nam never eats fish.", exp: "○○○○ là never." },
+      { type: "choice", sub: "A3. Chia động từ", text: "8. Look! The cat ________ (sit) on the table.", options: ["is sitting", "sits", "sit"], correctAns: "is sitting", exp: "Look! dùng Hiện tại tiếp diễn: is sitting." },
+      { type: "choice", sub: "A3. Chia động từ", text: "9. Today Nam ________ (wear) a red T-shirt.", options: ["is wearing", "wears", "wear"], correctAns: "is wearing", exp: "Today dùng is wearing." },
+      { type: "choice", sub: "A3. Chia động từ", text: "10. The waiters ________ (wear) blue uniforms every day.", options: ["wear", "are wearing", "wears"], correctAns: "wear", exp: "every day + The waiters (số nhiều) dùng wear." }
     ],
     partB: [
-      {
-        passage: "We asked four children about their favourite breakfast foods. Abd Allah is from Egypt (eats fuul - mashed beans and flat bread). Pete is from Scotland (eats cereal with milk). Huong is from Vietnam (eats noodle soup and xoi). Mariana is from Mexico (eats huevos rancheros: eggs cooked in tomato and chilli sauce on tortilla pancake).",
-        type: "choice",
-        sub: "B. Reading",
-        text: "1. Where is Abd Allah from?",
-        options: ["Egypt", "Mexico", "Scotland", "Vietnam"],
-        correctAns: "Egypt",
-        exp: "21. D (Egypt) - Abd Allah đến từ Ai Cập."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "2. What is fuul?",
-        options: ["mashed beans", "noodle soup", "cereal", "pancake"],
-        correctAns: "mashed beans",
-        exp: "22. C (mashed beans) - Món đậu nghiền."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "3. Where is Pete from?",
-        options: ["Scotland", "Egypt", "Mexico", "Vietnam"],
-        correctAns: "Scotland",
-        exp: "23. B (Scotland) - Pete đến từ Scotland."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "4. What does Pete usually have for breakfast?",
-        options: ["a bowl of cereal with milk", "noodle soup", "eggs", "rice balls"],
-        correctAns: "a bowl of cereal with milk",
-        exp: "24. A - Pete ăn ngũ cốc với sữa."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "5. Why doesn't Pete have a very big breakfast?",
-        options: ["he eats lunch early at school", "he doesn't like food", "he is ill", "he has no time"],
-        correctAns: "he eats lunch early at school",
-        exp: "25. D - Vì ăn trưa sớm ở trường."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "6. Who makes noodle soup for Huong?",
-        options: ["her grandma", "her dad", "her teacher", "her friend"],
-        correctAns: "her grandma",
-        exp: "26. C (her grandma) - Bà của Hương nấu."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "7. Rice balls (xoi) are wrapped in ___.",
-        options: ["coconut leaves", "paper", "plastic", "bread"],
-        correctAns: "coconut leaves",
-        exp: "27. B (coconut leaves) - Gói trong lá dừa."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "8. Where is Mariana from?",
-        options: ["Mexico", "Egypt", "Scotland", "Vietnam"],
-        correctAns: "Mexico",
-        exp: "28. A (Mexico) - Mariana đến từ Mexico."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "9. Huevos rancheros are ___.",
-        options: ["eggs cooked in tomato and chilli sauce", "rice with beans", "mashed beans", "noodle soup"],
-        correctAns: "eggs cooked in tomato and chilli sauce",
-        exp: "29. D - Trứng nấu sốt cà chua và ớt."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "10. What did the writers ask the four children?",
-        options: ["What do you like for breakfast?", "What is your name?", "Where do you live?", "How old are you?"],
-        correctAns: "What do you like for breakfast?",
-        exp: "35. B - Câu hỏi phỏng vấn về món ăn sáng yêu thích."
-      }
+      { type: "choice", sub: "B1. Phân loại âm", text: "1. Từ 'rain' thuộc nhóm âm nào?", options: ["Long a /eɪ/", "Long e /iː/"], correctAns: "Long a /eɪ/", exp: "rain là âm /eɪ/." },
+      { type: "choice", sub: "B1. Phân loại âm", text: "2. Từ 'tree' thuộc nhóm âm nào?", options: ["Long e /iː/", "Long a /eɪ/"], correctAns: "Long e /iː/", exp: "tree là âm /iː/." },
+      { type: "choice", sub: "B1. Phân loại âm", text: "3. Từ 'cake' thuộc nhóm âm nào?", options: ["Long a /eɪ/", "Long e /iː/"], correctAns: "Long a /eɪ/", exp: "cake là âm /eɪ/." },
+      { type: "choice", sub: "B1. Phân loại âm", text: "4. Từ 'sea' thuộc nhóm âm nào?", options: ["Long e /iː/", "Long a /eɪ/"], correctAns: "Long e /iː/", exp: "sea là âm /iː/." },
+      { type: "choice", sub: "B1. Phân loại âm", text: "5. Từ 'day' thuộc nhóm âm nào?", options: ["Long a /eɪ/", "Long e /iː/"], correctAns: "Long a /eɪ/", exp: "day là âm /eɪ/." },
+      { type: "choice", sub: "B2. Chọn từ khác âm", text: "6. train · play · tree · day", options: ["tree", "train", "play", "day"], correctAns: "tree", exp: "tree là /iː/, còn lại là /eɪ/." },
+      { type: "choice", sub: "B2. Chọn từ khác âm", text: "7. sea · meet · name · key", options: ["name", "sea", "meet", "key"], correctAns: "name", exp: "name là /eɪ/, còn lại là /iː/." },
+      { type: "choice", sub: "B2. Chọn từ khác âm", text: "8. cake · tray · make · leaf", options: ["leaf", "cake", "tray", "make"], correctAns: "leaf", exp: "leaf là /iː/, còn lại là /eɪ/." },
+      { type: "input", sub: "B3. Điền chữ cái", text: "9. Điền chữ cái vào: r____n (cơn mưa)", correctAns: "rain", exp: "rain." },
+      { type: "input", sub: "B3. Điền chữ cái", text: "10. Điền chữ cái vào: gr____n (màu xanh lá)", correctAns: "green", exp: "green." }
     ],
     partC: [
-      { type: "choice", sub: "C. Grammar", text: "1. Which sentence is correct?", options: ["She is always late.", "She always is late.", "Always she is late.", "She is late always."], correctAns: "She is always late.", exp: "36. A - Trạng từ tần suất đứng sau to be." },
-      { type: "choice", sub: "C. Grammar", text: "2. Which sentence is correct?", options: ["He never drinks coffee.", "He drinks never coffee.", "He never is drinking coffee.", "Never he drink coffee."], correctAns: "He never drinks coffee.", exp: "37. D - Trạng từ tần suất đứng trước động từ thường." },
-      { type: "choice", sub: "C. Grammar", text: "3. 'Rarely' means ___.", options: ["almost never", "always", "every day", "often"], correctAns: "almost never", exp: "38. C (almost never) - Hiếm khi." },
-      { type: "choice", sub: "C. Grammar", text: "4. I ___ have lunch at school.", options: ["always", "am always", "being always", "has always"], correctAns: "always", exp: "39. B (always) - I always have." },
-      { type: "choice", sub: "C. Grammar", text: "5. Listen! The children ___.", options: ["are singing", "sing", "sings", "singing"], correctAns: "are singing", exp: "40. A (are singing) - Listen! chia tiếp diễn." },
-      { type: "choice", sub: "C. Grammar", text: "6. My dad ___ the news every evening.", options: ["watches", "is watching", "watch", "watching"], correctAns: "watches", exp: "41. D (watches) - every evening chia hiện tại đơn ngôi 3 số ít." },
-      { type: "choice", sub: "C. Grammar", text: "7. Right now, Mai ___ a book.", options: ["is reading", "reads", "read", "reading"], correctAns: "is reading", exp: "42. C (is reading) - Right now chia tiếp diễn." },
-      { type: "choice", sub: "C. Grammar", text: "8. We ___ on Fridays.", options: ["sometimes eat pizza", "are sometimes eating pizza", "sometimes eating pizza", "sometimes eats pizza"], correctAns: "sometimes eat pizza", exp: "43. B (sometimes eat pizza)." },
-      { type: "choice", sub: "C. Grammar", text: "9. Which sentence is present continuous?", options: ["He is eating pasta now.", "He eats pasta.", "He eat pasta.", "He will eat pasta."], correctAns: "He is eating pasta now.", exp: "44. A - Câu thì hiện tại tiếp diễn." },
-      { type: "choice", sub: "C. Grammar", text: "10. Which sentence talks about a habit?", options: ["She usually has soup.", "She is having soup.", "She's having soup now.", "She is eating soup today."], correctAns: "She usually has soup.", exp: "45. D - Câu nói về thói quen." },
-      { type: "choice", sub: "C. Grammar", text: "11. 'At the moment' goes with ___.", options: ["is cooking", "cooks", "cook", "cooked"], correctAns: "is cooking", exp: "46. C (is cooking) - at the moment đi với tiếp diễn." },
-      { type: "choice", sub: "C. Grammar", text: "12. I ___ playing football today.", options: ["am", "is", "are", "be"], correctAns: "am", exp: "47. B (am) - I am playing." },
-      { type: "choice", sub: "C. Grammar", text: "13. He ___ eating.", options: ["is", "am", "are", "be"], correctAns: "is", exp: "48. A (is) - He is eating." },
-      { type: "choice", sub: "C. Grammar", text: "14. They ___ having lunch.", options: ["are", "is", "am", "be"], correctAns: "are", exp: "49. D (are) - They are having lunch." },
-      { type: "choice", sub: "C. Grammar", text: "15. She ___ goes to bed at ten.", options: ["usually", "is usually", "usually is", "are usually"], correctAns: "usually", exp: "50. C (usually) - She usually goes." }
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C1. Đọc hiểu chi tiết",
+        text: "1. What does Ben usually have for breakfast?",
+        options: ["cereal with milk and orange juice", "pancakes and tea", "toast with butter", "noodles"],
+        correctAns: "cereal with milk and orange juice",
+        exp: "Ben: 'I usually have cereal with milk and a glass of orange juice.'"
+      },
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C1. Đọc hiểu chi tiết",
+        text: "2. What does Amy rarely eat?",
+        options: ["cereal", "toast", "pancakes", "butter"],
+        correctAns: "cereal",
+        exp: "'My sister Amy rarely eats cereal.'"
+      },
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C1. Đọc hiểu chi tiết",
+        text: "3. What does Amy like?",
+        options: ["toast with butter", "cereal with milk", "soup", "pancakes"],
+        correctAns: "toast with butter",
+        exp: "'She likes toast with butter.'"
+      },
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C1. Đọc hiểu chi tiết",
+        text: "4. Who is cooking now?",
+        options: ["Dad", "Ben", "Amy", "Mum"],
+        correctAns: "Dad",
+        exp: "'so Dad is cooking in the kitchen now.'"
+      },
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C1. Đọc hiểu chi tiết",
+        text: "5. What is Ben drinking now?",
+        options: ["his juice", "milk", "coffee", "water"],
+        correctAns: "his juice",
+        exp: "'and I'm drinking my juice.'"
+      },
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C2. True / False",
+        text: "6. Ben is from Scotland.",
+        options: ["False", "True"],
+        correctAns: "False",
+        exp: "Ben đến từ nước Anh (England)."
+      },
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C2. True / False",
+        text: "7. Ben's dad makes pancakes every Sunday.",
+        options: ["True", "False"],
+        correctAns: "True",
+        exp: "'On Sundays, my dad always makes pancakes.'"
+      },
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C2. True / False",
+        text: "8. Amy is cooking now.",
+        options: ["False", "True"],
+        correctAns: "False",
+        exp: "Bố mới là người đang nấu, Amy đang đọc sách."
+      },
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C3. Từ vựng & Ngữ pháp đọc hiểu",
+        text: "9. What is Amy doing at the table?",
+        options: ["reading a book", "sleeping", "eating soup", "drinking juice"],
+        correctAns: "reading a book",
+        exp: "'Amy is reading a book at the table.'"
+      },
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C3. Từ vựng & Ngữ pháp đọc hiểu",
+        text: "10. In the sentence 'I usually have cereal', what does 'have' mean?",
+        options: ["eat", "make", "cook", "buy"],
+        correctAns: "eat",
+        exp: "'have cereal' tương đương với 'eat cereal' (ăn ngũ cốc)."
+      },
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C3. Từ vựng & Ngữ pháp đọc hiểu",
+        text: "11. 'rarely' in the text means:",
+        options: ["not very often", "always", "every day", "right now"],
+        correctAns: "not very often",
+        exp: "'rarely' nghĩa là hiếm khi (not very often)."
+      },
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C3. Từ vựng & Ngữ pháp đọc hiểu",
+        text: "12. Where is Dad cooking?",
+        options: ["in the kitchen", "in the garden", "in the living room", "at school"],
+        correctAns: "in the kitchen",
+        exp: "'Dad is cooking in the kitchen now.'"
+      },
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C3. Từ vựng & Ngữ pháp đọc hiểu",
+        text: "13. What day is it today?",
+        options: ["Sunday", "Monday", "Saturday", "Friday"],
+        correctAns: "Sunday",
+        exp: "'It's Sunday today.'"
+      },
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C3. Từ vựng & Ngữ pháp đọc hiểu",
+        text: "14. How many people are mentioned eating breakfast at home?",
+        options: ["Three (Ben, Amy, Dad)", "Two", "Four", "Five"],
+        correctAns: "Three (Ben, Amy, Dad)",
+        exp: "Trong đoạn văn nhắc đến Ben, Amy và Dad."
+      },
+      {
+        passage: "Hi! My name's Ben and I'm from England. I usually have cereal with milk and a glass of orange juice for breakfast. My sister Amy rarely eats cereal. She likes toast with butter. On Sundays, my dad always makes pancakes. It's Sunday today, so Dad is cooking in the kitchen now. Amy is reading a book at the table and I'm drinking my juice. We love Sunday breakfast!",
+        type: "choice",
+        sub: "C3. Từ vựng & Ngữ pháp đọc hiểu",
+        text: "15. How do Ben and his sister feel about Sunday breakfast?",
+        options: ["They love it", "They hate it", "They are bored", "They feel scared"],
+        correctAns: "They love it",
+        exp: "Câu cuối: 'We love Sunday breakfast!'"
+      }
     ]
   },
 
@@ -963,171 +936,318 @@ const COMPREHENSIVE_LESSONS = {
     partBTitle: "B. Story (10 câu)",
     partCTitle: "C. Past Simple Grammar (15 câu)",
     partA: [
-      { type: "choice", sub: "A. Vocabulary", text: "1. The people who watch a concert are the ___.", options: ["audience", "stage", "programme", "recorder"], correctAns: "audience", exp: "1. D (audience) - Khán giả." },
-      { type: "choice", sub: "A. Vocabulary", text: "2. A musician stands on the ___.", options: ["stage", "audience", "programme", "concert"], correctAns: "stage", exp: "2. C (stage) - Sân khấu." },
-      { type: "choice", sub: "A. Vocabulary", text: "3. You hit the ___ with sticks.", options: ["drums", "violin", "recorder", "trumpet"], correctAns: "drums", exp: "3. B (drums) - Trống gõ bằng dùi." },
-      { type: "choice", sub: "A. Vocabulary", text: "4. You play the ___ with a bow.", options: ["violin", "drums", "trumpet", "recorder"], correctAns: "violin", exp: "4. A (violin) - Đàn violin kéo bằng vĩ." },
-      { type: "choice", sub: "A. Vocabulary", text: "5. A ___ is a small instrument you blow into.", options: ["recorder", "violin", "drums", "stage"], correctAns: "recorder", exp: "5. D (recorder) - Sáo dọc." },
-      { type: "choice", sub: "A. Vocabulary", text: "6. A ___ is a shiny instrument you blow.", options: ["trumpet", "violin", "drums", "programme"], correctAns: "trumpet", exp: "6. C (trumpet) - Kèn trumpet." },
-      { type: "choice", sub: "A. Vocabulary", text: "7. A paper that tells you about the concert is a ___.", options: ["programme", "stage", "audience", "concert"], correctAns: "programme", exp: "7. B (programme) - Tờ chương trình." },
-      { type: "choice", sub: "A. Vocabulary", text: "8. Violins, drums and trumpets are all ___.", options: ["instruments", "concerts", "programmes", "audiences"], correctAns: "instruments", exp: "8. A (instruments) - Nhạc cụ." },
-      { type: "choice", sub: "A. Vocabulary", text: "9. When people ___ they shout happily to show they like something.", options: ["cheer", "sit", "sleep", "read"], correctAns: "cheer", exp: "9. D (cheer) - Reo hò cổ vũ." },
-      { type: "choice", sub: "A. Vocabulary", text: "10. We went to a ___ at school and heard lots of music.", options: ["concert", "stage", "programme", "drum"], correctAns: "concert", exp: "10. C (concert) - Buổi hoà nhạc." }
+      { type: "input", sub: "A1. Xếp chữ", text: "1. Unscramble: otccrne →", correctAns: "concert", exp: "Buổi hòa nhạc: concert." },
+      { type: "input", sub: "A1. Xếp chữ", text: "2. Unscramble: niivlo →", correctAns: "violin", exp: "Đàn vĩ cầm: violin." },
+      { type: "input", sub: "A1. Xếp chữ", text: "3. Unscramble: ineadecu →", correctAns: "audience", exp: "Khán giả: audience." },
+      { type: "input", sub: "A1. Xếp chữ", text: "4. Unscramble: odrrcree →", correctAns: "recorder", exp: "Sáo recorder." },
+      { type: "input", sub: "A1. Xếp chữ", text: "5. Unscramble: rtmteup →", correctAns: "trumpet", exp: "Kèn trumpet." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "6. People who watch a concert:", options: ["audience", "waiter", "customer", "player"], correctAns: "audience", exp: "Khán giả: audience." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "7. You play it with sticks:", options: ["drums", "recorder", "violin", "trumpet"], correctAns: "drums", exp: "Trống đánh bằng dùi: drums." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "8. The place where musicians stand:", options: ["stage", "roundabout", "restaurant", "hall"], correctAns: "stage", exp: "Sân khấu: stage." },
+      { type: "choice", sub: "A3. Điền từ", text: "9. The ______ clapped and cheered at the end.", options: ["audience", "trumpet", "programme", "stage"], correctAns: "audience", exp: "Khán giả vỗ tay: audience." },
+      { type: "choice", sub: "A3. Điền từ", text: "10. Tom played the ______ in the band.", options: ["trumpet", "audience", "stage", "customer"], correctAns: "trumpet", exp: "Chơi kèn trumpet." }
     ],
     partB: [
-      { type: "choice", sub: "B. Story", text: "1. Where did Amy and Leo have their concert?", options: ["at their house in Australia", "at school", "in a park", "in a theatre"], correctAns: "at their house in Australia", exp: "21. D (at their house in Australia)." },
-      { type: "choice", sub: "B. Story", text: "2. When was the concert?", options: ["two years ago", "yesterday", "last week", "next year"], correctAns: "two years ago", exp: "22. C (two years ago) - Hai năm trước." },
-      { type: "choice", sub: "B. Story", text: "3. Who was at the concert?", options: ["all their family and friends", "only Amy", "nobody", "only teachers"], correctAns: "all their family and friends", exp: "23. B (all their family and friends)." },
-      { type: "choice", sub: "B. Story", text: "4. What did Leo play?", options: ["the drums", "the violin", "the guitar", "the trumpet"], correctAns: "the drums", exp: "24. A (the drums) - Leo chơi trống." },
-      { type: "choice", sub: "B. Story", text: "5. What did Holly think Amy played?", options: ["the guitar", "the drums", "the piano", "the recorder"], correctAns: "the guitar", exp: "25. D (the guitar) - Holly tưởng Amy chơi đàn guitar." },
-      { type: "choice", sub: "B. Story", text: "6. What does Amy say about the guitar?", options: ["She doesn't play the guitar", "She plays it well", "She sells it", "She broke it"], correctAns: "She doesn't play the guitar", exp: "26. C - Amy không biết chơi guitar." },
-      { type: "choice", sub: "B. Story", text: "7. What instrument did Amy really play?", options: ["the violin", "the drums", "the trumpet", "the guitar"], correctAns: "the violin", exp: "27. B (the violin) - Thực ra Amy chơi violin." },
-      { type: "choice", sub: "B. Story", text: "8. Where does Amy hold the violin?", options: ["on her shoulder", "on her knees", "on her head", "on the floor"], correctAns: "on her shoulder", exp: "28. A (on her shoulder) - Đặt đàn trên vai." },
-      { type: "choice", sub: "B. Story", text: "9. Amy says the violin is ___.", options: ["much smaller than a guitar", "much bigger than a guitar", "heavier than a drum", "louder than a trumpet"], correctAns: "much smaller than a guitar", exp: "30. C - Nhỏ hơn nhiều so với đàn guitar." },
-      { type: "choice", sub: "B. Story", text: "10. What was Max's idea?", options: ["to have a concert here", "to go to Australia", "to buy instruments", "to play football"], correctAns: "to have a concert here", exp: "31. B - Tổ chức buổi hoà nhạc bất ngờ tại đây." }
+      { type: "choice", sub: "B1. True / False", text: "1. The concert was at Amy and Leo's house in Australia.", options: ["True", "False"], correctAns: "True", exp: "Đúng theo bài khoá trang 14." },
+      { type: "choice", sub: "B1. True / False", text: "2. Leo played the violin.", options: ["False", "True"], correctAns: "False", exp: "Leo chơi trống (Leo played the drums)." },
+      { type: "choice", sub: "B1. True / False", text: "3. Amy plays the guitar.", options: ["False", "True"], correctAns: "False", exp: "Amy chơi đàn violin chứ không phải guitar." },
+      { type: "choice", sub: "B1. True / False", text: "4. Holly thought Amy played the guitar.", options: ["True", "False"], correctAns: "True", exp: "Holly tưởng Amy chơi đàn guitar." },
+      { type: "choice", sub: "B1. True / False", text: "5. Max wants to have a concert.", options: ["True", "False"], correctAns: "True", exp: "Max muốn tổ chức buổi hòa nhạc bất ngờ." },
+      { type: "choice", sub: "B1. True / False", text: "6. The audience didn't clap.", options: ["False", "True"], correctAns: "False", exp: "Khán giả vỗ tay reo hò (clapped and cheered)." },
+      { type: "choice", sub: "B2. Câu hỏi", text: "7. What instrument did Amy play?", options: ["the violin", "the drums", "the guitar", "the recorder"], correctAns: "the violin", exp: "Amy chơi violin." },
+      { type: "choice", sub: "B2. Câu hỏi", text: "8. Whose idea is the surprise concert?", options: ["Max's idea", "Leo's idea", "Amy's idea", "Mum's idea"], correctAns: "Max's idea", exp: "Max nói: 'Let's make it a surprise!'" },
+      { type: "choice", sub: "B2. Câu hỏi", text: "9. Who was in the audience in Australia?", options: ["All our family and friends", "Only parents", "Teachers", "Nobody"], correctAns: "All our family and friends", exp: "'All our family and friends were there.'" },
+      { type: "choice", sub: "B2. Câu hỏi", text: "10. How long did the audience clap and cheer?", options: ["for ages", "for one minute", "not at all", "ten seconds"], correctAns: "for ages", exp: "'The audience clapped and cheered for ages.'" }
     ],
     partC: [
-      { type: "choice", sub: "C. Past Simple", text: "1. We ___ a concert at our house.", options: ["had", "have", "has", "haved"], correctAns: "had", exp: "36. A (had) - Quá khứ của have là had." },
-      { type: "choice", sub: "C. Past Simple", text: "2. All our friends ___ there.", options: ["were", "was", "are", "is"], correctAns: "were", exp: "37. D (were) - All our friends số nhiều đi với were." },
-      { type: "choice", sub: "C. Past Simple", text: "3. Everyone ___ brilliant.", options: ["was", "were", "is", "are"], correctAns: "was", exp: "38. C (was) - Everyone số ít đi với was." },
-      { type: "choice", sub: "C. Past Simple", text: "4. Mum ___ the piano.", options: ["played", "play", "plays", "playing"], correctAns: "played", exp: "39. B (played) - Thêm ed vào động từ." },
-      { type: "choice", sub: "C. Past Simple", text: "5. The audience ___ and cheered.", options: ["clapped", "clapt", "clap", "clapping"], correctAns: "clapped", exp: "40. A (clapped) - Gấp đôi p trước khi thêm ed." },
-      { type: "choice", sub: "C. Past Simple", text: "6. She ___ her room yesterday.", options: ["tidied", "tidyed", "tidys", "tided"], correctAns: "tidied", exp: "41. D (tidied) - y đổi thành ied." },
-      { type: "choice", sub: "C. Past Simple", text: "7. I ___ at home last night.", options: ["was", "were", "am", "be"], correctAns: "was", exp: "42. C (was) - I đi với was." },
-      { type: "choice", sub: "C. Past Simple", text: "8. They ___ happy.", options: ["were", "was", "is", "am"], correctAns: "were", exp: "43. B (were) - They đi với were." },
-      { type: "choice", sub: "C. Past Simple", text: "9. He ___ the concert.", options: ["enjoyed", "enjoyd", "enjoies", "enjoy"], correctAns: "enjoyed", exp: "44. A (enjoyed) - Thêm ed." },
-      { type: "choice", sub: "C. Past Simple", text: "10. The past of 'have' is ___.", options: ["had", "haved", "has", "having"], correctAns: "had", exp: "45. D (had)." },
-      { type: "choice", sub: "C. Past Simple", text: "11. The past of 'clap' is ___.", options: ["clapped", "claped", "clapt", "clapping"], correctAns: "clapped", exp: "46. C (clapped)." },
-      { type: "choice", sub: "C. Past Simple", text: "12. The past of 'tidy' is ___.", options: ["tidied", "tidyed", "tidyd", "tidyes"], correctAns: "tidied", exp: "47. B (tidied)." },
-      { type: "choice", sub: "C. Past Simple", text: "13. Which sentence is in the past?", options: ["We played the drums.", "We play the drums.", "We are playing the drums.", "We will play the drums."], correctAns: "We played the drums.", exp: "48. A - Câu có động từ đuôi -ed." },
-      { type: "choice", sub: "C. Past Simple", text: "14. You ___ at the party.", options: ["were", "was", "are", "is"], correctAns: "were", exp: "49. D (were) - You đi với were." },
-      { type: "choice", sub: "C. Past Simple", text: "15. The children ___ on stage.", options: ["were", "was", "are", "is"], correctAns: "were", exp: "50. C (were) - The children số nhiều dùng were." }
+      { type: "choice", sub: "C1. Past Simple", text: "1. Yesterday I (am / was) at home.", options: ["was", "am"], correctAns: "was", exp: "Quá khứ của I am là I was." },
+      { type: "choice", sub: "C1. Past Simple", text: "2. We (had / have) a concert last week.", options: ["had", "have"], correctAns: "had", exp: "last week dùng thì quá khứ had." },
+      { type: "choice", sub: "C1. Past Simple", text: "3. They (were / was) happy.", options: ["were", "was"], correctAns: "were", exp: "They đi với were." },
+      { type: "choice", sub: "C1. Past Simple", text: "4. Mai (play / played) the piano last night.", options: ["played", "play"], correctAns: "played", exp: "last night dùng played." },
+      { type: "choice", sub: "C1. Past Simple", text: "5. The audience (clapped / clapt) loudly.", options: ["clapped", "clapt"], correctAns: "clapped", exp: "Gấp đôi p: clapped." },
+      { type: "choice", sub: "C1. Past Simple", text: "6. My mum (tidy / tidied) the house on Sunday.", options: ["tidied", "tidy"], correctAns: "tidied", exp: "y đổi thành ied: tidied." },
+      { type: "input", sub: "C2. Verb Form", text: "7. Last year we ______ (have) a school concert.", correctAns: "had", exp: "have đổi thành had." },
+      { type: "input", sub: "C2. Verb Form", text: "8. The children ______ (be) on stage.", correctAns: "were", exp: "The children số nhiều dùng were." },
+      { type: "input", sub: "C2. Verb Form", text: "9. Linh ______ (play) the violin.", correctAns: "played", exp: "play thêm -ed: played." },
+      { type: "input", sub: "C2. Verb Form", text: "10. It ______ (be) a great day.", correctAns: "was", exp: "It số ít dùng was." },
+      { type: "choice", sub: "C3. Sắp xếp", text: "11. had / a / We / concert / last year", options: ["We had a concert last year.", "We a concert had last year.", "Last year had we a concert."], correctAns: "We had a concert last year.", exp: "S + V2 + O + time." },
+      { type: "choice", sub: "C3. Sắp xếp", text: "12. were / at / My friends / the party", options: ["My friends were at the party.", "My friends at the party were.", "At the party were my friends."], correctAns: "My friends were at the party.", exp: "My friends were at the party." },
+      { type: "choice", sub: "C3. Sắp xếp", text: "13. played / Leo / the / drums", options: ["Leo played the drums.", "Leo the drums played.", "Played Leo the drums."], correctAns: "Leo played the drums.", exp: "Leo played the drums." },
+      { type: "choice", sub: "C4. Sửa lỗi sai", text: "14. Sửa lỗi: 'I was play the drums yesterday.'", options: ["I played the drums yesterday.", "I was played the drums yesterday.", "I play the drums yesterday."], correctAns: "I played the drums yesterday.", exp: "Không dùng was + V nguyên thể." },
+      { type: "choice", sub: "C4. Sửa lỗi sai", text: "15. Sửa lỗi: 'They was at the concert.'", options: ["They were at the concert.", "They are at the concert.", "They was being at the concert."], correctAns: "They were at the concert.", exp: "They đi với were." }
     ]
   },
 
   // UNIT 2 - TIẾT 2
   "u2_l2": {
     title: "Unit 2 - Tiết 2: Time markers & Phonics",
-    partATitle: "A. Phonics & Vocabulary (10 câu)",
-    partBTitle: "B. Reading: Festival Day (10 câu)",
-    partCTitle: "C. Past Time Markers (15 câu)",
+    partATitle: "A. Time markers (10 câu)",
+    partBTitle: "B. Phonics: Long i, o, u (10 câu)",
+    partCTitle: "C. Reading & Writing (15 câu)",
     partA: [
-      { type: "choice", sub: "A. Phonics", text: "1. Which word has a long i /aɪ/ sound?", options: ["light", "boat", "room", "soap"], correctAns: "light", exp: "1. A (light) - Âm /aɪ/." },
-      { type: "choice", sub: "A. Phonics", text: "2. Which word has a long o /əʊ/ sound?", options: ["boat", "light", "blue", "bike"], correctAns: "boat", exp: "2. D (boat) - Âm /əʊ/." },
-      { type: "choice", sub: "A. Phonics", text: "3. Which word has a long u /uː/ sound?", options: ["blue", "cry", "boat", "bike"], correctAns: "blue", exp: "3. C (blue) - Âm /uː/." },
-      { type: "choice", sub: "A. Phonics", text: "4. Which word has the same vowel sound as 'cry'?", options: ["sky", "boat", "moon", "bone"], correctAns: "sky", exp: "4. B (sky) - Cùng âm /aɪ/." },
-      { type: "choice", sub: "A. Phonics", text: "5. Which word has the same vowel sound as 'bone'?", options: ["boat", "moon", "bike", "light"], correctAns: "boat", exp: "5. A (boat) - Cùng âm /əʊ/." },
-      { type: "choice", sub: "A. Phonics", text: "6. Which word has the same vowel sound as 'moon'?", options: ["room", "boat", "sky", "light"], correctAns: "room", exp: "6. D (room) - Cùng âm /uː/." },
-      { type: "choice", sub: "A. Phonics", text: "7. Which word is the odd one out?", options: ["soap", "light", "smile", "cry"], correctAns: "soap", exp: "7. C (soap) - soap là âm /əʊ/, còn lại là /aɪ/." },
-      { type: "choice", sub: "A. Phonics", text: "8. Which word is the odd one out?", options: ["moon", "bone", "elbow", "snow"], correctAns: "moon", exp: "8. B (moon) - moon là âm /uː/." },
-      { type: "choice", sub: "A. Vocabulary", text: "9. 'Cymbals' are ___.", options: ["metal plates you crash together", "a kind of drum", "a bird", "a street"], correctAns: "metal plates you crash together", exp: "14. D - Chũm choẹ (nhạc cụ kim loại gõ vào nhau)." },
-      { type: "choice", sub: "A. Vocabulary", text: "10. 'Thunder' is ___.", options: ["a loud sound in a storm", "a quiet sound", "a bird", "a drum"], correctAns: "a loud sound in a storm", exp: "16. B - Tiếng sấm lớn." }
+      { type: "choice", sub: "A1. Điền dấu hiệu", text: "1. My birthday was ______ week.", options: ["last", "yesterday", "ago"], correctAns: "last", exp: "last week." },
+      { type: "choice", sub: "A1. Điền dấu hiệu", text: "2. We had a party two days ______.", options: ["ago", "last", "yesterday"], correctAns: "ago", exp: "two days ago." },
+      { type: "choice", sub: "A1. Điền dấu hiệu", text: "3. ______ I was at school.", options: ["Yesterday", "Ago", "Last"], correctAns: "Yesterday", exp: "Yesterday đứng đầu câu." },
+      { type: "choice", sub: "A1. Điền dấu hiệu", text: "4. I played the drums ______ night.", options: ["last", "ago", "yesterday"], correctAns: "last", exp: "last night." },
+      { type: "choice", sub: "A1. Điền dấu hiệu", text: "5. They were at home three weeks ______.", options: ["ago", "last", "yesterday"], correctAns: "ago", exp: "three weeks ago." },
+      { type: "choice", sub: "A1. Điền dấu hiệu", text: "6. We cleaned the house ______ year.", options: ["last", "ago", "yesterday"], correctAns: "last", exp: "last year." },
+      { type: "choice", sub: "A2. Viết câu", text: "7. party / two days ago (have)", options: ["We had a party two days ago.", "We have a party two days ago.", "We had a party ago two days."], correctAns: "We had a party two days ago.", exp: "ago đứng sau cụm thời gian." },
+      { type: "choice", sub: "A2. Viết câu", text: "8. I / school / yesterday (be)", options: ["I was at school yesterday.", "I were at school yesterday.", "I am at school yesterday."], correctAns: "I was at school yesterday.", exp: "I đi với was." },
+      { type: "choice", sub: "A2. Viết câu", text: "9. they / football / last night (play)", options: ["They played football last night.", "They play football last night.", "They were play football last night."], correctAns: "They played football last night.", exp: "played." },
+      { type: "choice", sub: "A2. Viết câu", text: "10. my cousin / visit us / last year", options: ["My cousin visited us last year.", "My cousin visit us last year.", "My cousin was visit us last year."], correctAns: "My cousin visited us last year.", exp: "visited." }
     ],
     partB: [
-      {
-        passage: "Festival day: I run to the window, hear the beat. Everyone is clapping outside in the street. I hear the drums that thump and bang. I look at the cymbals sparkling as they clang. Trumpets honk and sound like thunder. Birds flap their wings and join in. When I grow up, I want to play in a music group.",
-        type: "choice",
-        sub: "B. Reading",
-        text: "1. What kind of text is 'Festival day'?",
-        options: ["a poem", "a letter", "an email", "a recipe"],
-        correctAns: "a poem",
-        exp: "21. A (a poem) - Thể loại bài thơ."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "2. Where does the speaker run to at the start?",
-        options: ["the window", "the garden", "the kitchen", "the school"],
-        correctAns: "the window",
-        exp: "22. D (the window) - Chạy ra cửa sổ."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "3. What are the people in the street doing?",
-        options: ["clapping", "sleeping", "eating", "swimming"],
-        correctAns: "clapping",
-        exp: "23. C (clapping) - Đang vỗ tay reo mừng."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "4. What makes a thump and a bang?",
-        options: ["the drums", "the trumpets", "the birds", "the cymbals"],
-        correctAns: "the drums",
-        exp: "24. B (the drums) - Tiếng trống gõ bập bùng."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "5. What sparkles and clangs?",
-        options: ["the cymbals", "the drums", "the birds", "the street"],
-        correctAns: "the cymbals",
-        exp: "25. A (the cymbals) - Tiếng chũm choẹ loé sáng và leng keng."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "6. What are people tapping?",
-        options: ["their feet", "their hands", "their books", "their drums"],
-        correctAns: "their feet",
-        exp: "26. D (their feet) - Dậm chân theo điệu nhạc."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "7. What sounds like thunder?",
-        options: ["the trumpets", "the drums", "the birds", "the cymbals"],
-        correctAns: "the trumpets",
-        exp: "28. B (the trumpets) - Tiếng kèn trumpet vang như sấm rền."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "8. What do the birds do?",
-        options: ["flap their wings and join in the music", "sleep", "fly away", "eat"],
-        correctAns: "flap their wings and join in the music",
-        exp: "30. D - Vỗ cánh và cùng hoà vào điệu nhạc."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "9. What does the speaker want to do when growing up?",
-        options: ["play in a music group", "be a teacher", "play football", "travel"],
-        correctAns: "play in a music group",
-        exp: "32. B - Chơi trong một ban nhạc."
-      },
-      {
-        type: "choice",
-        sub: "B. Reading",
-        text: "10. Where is the festival?",
-        options: ["in the street", "in a school", "at the beach", "in a house"],
-        correctAns: "in the street",
-        exp: "34. D (in the street) - Lễ hội trên đường phố."
-      }
+      { type: "choice", sub: "B1. Chọn từ khác âm", text: "1. light · cry · boat · sky", options: ["boat", "light", "cry", "sky"], correctAns: "boat", exp: "boat là âm /əʊ/ (long o), còn lại là /aɪ/." },
+      { type: "choice", sub: "B1. Chọn từ khác âm", text: "2. bone · blow · moon · coat", options: ["moon", "bone", "blow", "coat"], correctAns: "moon", exp: "moon là âm /uː/ (long u)." },
+      { type: "choice", sub: "B1. Chọn từ khác âm", text: "3. blue · tune · soap · flute", options: ["soap", "blue", "tune", "flute"], correctAns: "soap", exp: "soap là âm /əʊ/." },
+      { type: "choice", sub: "B1. Chọn từ khác âm", text: "4. bike · night · cry · nose", options: ["nose", "bike", "night", "cry"], correctAns: "nose", exp: "nose là long o." },
+      { type: "choice", sub: "B1. Chọn từ khác âm", text: "5. boat · room · coat · snow", options: ["room", "boat", "coat", "snow"], correctAns: "room", exp: "room là long u." },
+      { type: "choice", sub: "B1. Chọn từ khác âm", text: "6. smile · like · stone · high", options: ["stone", "smile", "like", "high"], correctAns: "stone", exp: "stone là long o." },
+      { type: "choice", sub: "B2. Phân loại âm", text: "7. Từ 'bright' thuộc nhóm nào?", options: ["long i", "long o", "long u"], correctAns: "long i", exp: "bright là âm long i." },
+      { type: "choice", sub: "B2. Phân loại âm", text: "8. Từ 'room' thuộc nhóm nào?", options: ["long u", "long i", "long o"], correctAns: "long u", exp: "room là âm long u." },
+      { type: "choice", sub: "B2. Phân loại âm", text: "9. Từ 'cold' thuộc nhóm nào?", options: ["long o", "long i", "long u"], correctAns: "long o", exp: "cold là long o." },
+      { type: "choice", sub: "B2. Phân loại âm", text: "10. Từ 'sky' thuộc nhóm nào?", options: ["long i", "long o", "long u"], correctAns: "long i", exp: "sky là long i." }
     ],
     partC: [
-      { type: "choice", sub: "C. Time Markers", text: "1. We had a concert ___.", options: ["last week", "tomorrow", "next week", "now"], correctAns: "last week", exp: "36. B (last week) - Quá khứ had đi với last week." },
-      { type: "choice", sub: "C. Time Markers", text: "2. My birthday was ___.", options: ["yesterday", "tomorrow", "soon", "next week"], correctAns: "yesterday", exp: "37. A (yesterday) - was đi với yesterday." },
-      { type: "choice", sub: "C. Time Markers", text: "3. Two weeks ___ they had a party.", options: ["ago", "last", "next", "tomorrow"], correctAns: "ago", exp: "38. D (ago) - khoảng thời gian + ago." },
-      { type: "choice", sub: "C. Time Markers", text: "4. ___ night I played my drums.", options: ["Last", "Next", "Tomorrow", "Ago"], correctAns: "Last", exp: "39. C (Last) - Last night." },
-      { type: "choice", sub: "C. Time Markers", text: "5. Which sentence is correct?", options: ["I was at school yesterday.", "I am at school yesterday.", "I be at school yesterday.", "I will at school yesterday."], correctAns: "I was at school yesterday.", exp: "40. B - yesterday dùng was." },
-      { type: "choice", sub: "C. Time Markers", text: "6. Which time marker is past?", options: ["three days ago", "tomorrow", "next year", "soon"], correctAns: "three days ago", exp: "41. A (three days ago) - Dấu hiệu quá khứ." },
-      { type: "choice", sub: "C. Time Markers", text: "7. Which time marker is NOT past?", options: ["next week", "last week", "yesterday", "two days ago"], correctAns: "next week", exp: "42. D (next week) - next week là tương lai." },
-      { type: "choice", sub: "C. Time Markers", text: "8. Last month we ___ Grandma.", options: ["visited", "visit", "visits", "visiting"], correctAns: "visited", exp: "43. C (visited) - Last month chia quá khứ." },
-      { type: "choice", sub: "C. Time Markers", text: "9. Two years ___ we had a concert.", options: ["ago", "last", "next", "before"], correctAns: "ago", exp: "44. B (ago) - Two years ago." },
-      { type: "choice", sub: "C. Time Markers", text: "10. ___ was my birthday.", options: ["Yesterday", "Tomorrow", "Next", "Soon"], correctAns: "Yesterday", exp: "45. A (Yesterday) - Yesterday was." },
-      { type: "choice", sub: "C. Time Markers", text: "11. Last year we ___ in Australia.", options: ["were", "was", "are", "is"], correctAns: "were", exp: "46. D (were) - Last year we were." },
-      { type: "choice", sub: "C. Time Markers", text: "12. She ___ her room two days ago.", options: ["tidied", "tidies", "tidy", "tidying"], correctAns: "tidied", exp: "47. C (tidied) - two days ago chia quá khứ." },
-      { type: "choice", sub: "C. Time Markers", text: "13. Where can a time marker go in a sentence?", options: ["at the beginning or the end", "only in the middle", "only at the beginning", "nowhere"], correctAns: "at the beginning or the end", exp: "48. B - Đứng ở đầu hoặc cuối câu." },
-      { type: "choice", sub: "C. Time Markers", text: "14. I played the recorder ___.", options: ["last night", "next night", "tomorrow night", "now"], correctAns: "last night", exp: "49. A (last night)." },
-      { type: "choice", sub: "C. Time Markers", text: "15. Which sentence is correct?", options: ["She had a party five days ago.", "She has a party five days ago.", "She having a party five days ago.", "She have a party five days ago."], correctAns: "She had a party five days ago.", exp: "50. D - had a party five days ago." }
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C1. Đọc hiểu",
+        text: "1. When was the concert?",
+        options: ["Last Saturday", "Yesterday", "Last night", "Two days ago"],
+        correctAns: "Last Saturday",
+        exp: "'Last Saturday my class had a school concert.'"
+      },
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C1. Đọc hiểu",
+        text: "2. Where was the concert?",
+        options: ["in the school hall", "in the park", "at home", "in the garden"],
+        correctAns: "in the school hall",
+        exp: "'It was at 4 p.m. in the school hall.'"
+      },
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C1. Đọc hiểu",
+        text: "3. What did Mai play?",
+        options: ["the recorder", "the drums", "the violin", "the trumpet"],
+        correctAns: "the recorder",
+        exp: "Mai played the recorder."
+      },
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C1. Đọc hiểu",
+        text: "4. What did the audience do?",
+        options: ["clapped and cheered", "slept", "went home early", "danced"],
+        correctAns: "clapped and cheered",
+        exp: "'The audience clapped and cheered at the end.'"
+      },
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C1. True / False",
+        text: "5. Nam played the violin.",
+        options: ["False", "True"],
+        correctAns: "False",
+        exp: "Nam chơi trống (Nam played the drums)."
+      },
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C1. Đọc hiểu",
+        text: "6. What did the writer do at the concert?",
+        options: ["sang a song", "played drums", "played guitar", "danced"],
+        correctAns: "sang a song",
+        exp: "'I sang a song.'"
+      },
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C1. Đọc hiểu",
+        text: "7. Who took photos?",
+        options: ["My mum", "The teacher", "Nam", "Mai"],
+        correctAns: "My mum",
+        exp: "'My mum took photos.'"
+      },
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C1. Đọc hiểu",
+        text: "8. How was the day?",
+        options: ["fantastic", "boring", "bad", "terrible"],
+        correctAns: "fantastic",
+        exp: "'It was a fantastic day!'"
+      },
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C2. Ngữ pháp bài đọc",
+        text: "9. 'sang' is the past form of:",
+        options: ["sing", "song", "singed", "sings"],
+        correctAns: "sing",
+        exp: "Quá khứ của sing là sang."
+      },
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C2. Ngữ pháp bài đọc",
+        text: "10. 'took' is the past form of:",
+        options: ["take", "taking", "taked", "takes"],
+        correctAns: "take",
+        exp: "Quá khứ của take là took."
+      },
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C2. Ngữ pháp bài đọc",
+        text: "11. 'had' is the past form of:",
+        options: ["have", "has", "having", "haves"],
+        correctAns: "have",
+        exp: "have đổi thành had."
+      },
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C2. Ngữ pháp bài đọc",
+        text: "12. In 'clapped', why do we double 'p'?",
+        options: ["1 short vowel + 1 consonant", "because it sounds good", "no reason", "always double p"],
+        correctAns: "1 short vowel + 1 consonant",
+        exp: "1 nguyên âm ngắn + 1 phụ âm tận cùng."
+      },
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C3. Câu hỏi nâng cao",
+        text: "13. What time was the concert?",
+        options: ["at 4 p.m.", "at 8 a.m.", "at 12 p.m.", "at 7 p.m."],
+        correctAns: "at 4 p.m.",
+        exp: "'It was at 4 p.m.'"
+      },
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C3. Câu hỏi nâng cao",
+        text: "14. How many musical instruments were played in the text?",
+        options: ["Two (recorder and drums)", "One", "Three", "Four"],
+        correctAns: "Two (recorder and drums)",
+        exp: "Recorder và drums."
+      },
+      {
+        passage: "Last Saturday my class had a school concert. It was at 4 p.m. in the school hall. Mai played the recorder and Nam played the drums. I sang a song. The audience clapped and cheered at the end. My mum took photos. It was a fantastic day!",
+        type: "choice",
+        sub: "C3. Câu hỏi nâng cao",
+        text: "15. The word 'hall' means:",
+        options: ["a large room for events", "a small bedroom", "a kitchen", "a garden"],
+        correctAns: "a large room for events",
+        exp: "Hội trường: a large room for events."
+      }
+    ]
+  },
+
+  // UNIT 3 - TIẾT 1
+  "u3_l1": {
+    title: "Unit 3 - Tiết 3: The dinosaur museum",
+    partATitle: "A. Vocabulary (10 câu)",
+    partBTitle: "B. Story (10 câu)",
+    partCTitle: "C. Irregular verbs & didn't (15 câu)",
+    partA: [
+      { type: "input", sub: "A1. Xếp chữ", text: "1. Unscramble: oardnsui →", correctAns: "dinosaur", exp: "Khủng long: dinosaur." },
+      { type: "input", sub: "A1. Xếp chữ", text: "2. Unscramble: muumes →", correctAns: "museum", exp: "Bảo tàng: museum." },
+      { type: "input", sub: "A1. Xếp chữ", text: "3. Unscramble: ltnseeok →", correctAns: "skeleton", exp: "Bộ xương: skeleton." },
+      { type: "input", sub: "A1. Xếp chữ", text: "4. Unscramble: mcaser →", correctAns: "scream", exp: "Hét lên: scream." },
+      { type: "input", sub: "A1. Xếp chữ", text: "5. Unscramble: obort →", correctAns: "robot", exp: "Người máy: robot." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "6. Opposite of 'alive':", options: ["dead", "scary", "roar", "robot"], correctAns: "dead", exp: "Ngược nghĩa với alive là dead." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "7. A big animal that lived millions of years ago:", options: ["dinosaur", "robot", "skeleton", "museum"], correctAns: "dinosaur", exp: "Khủng long: dinosaur." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "8. A place where you see old things:", options: ["museum", "restaurant", "theatre", "hall"], correctAns: "museum", exp: "Bảo tàng: museum." },
+      { type: "choice", sub: "A3. Điền từ", text: "9. The lion started to ______ loudly.", options: ["roar", "scream", "skeleton", "robot"], correctAns: "roar", exp: "Sư tử gầm: roar." },
+      { type: "choice", sub: "A3. Điền từ", text: "10. The dinosaur ______ was big and white.", options: ["skeleton", "scream", "alive", "dead"], correctAns: "skeleton", exp: "Bộ xương: skeleton." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. True / False", text: "1. The children went to school today.", options: ["False", "True"], correctAns: "False", exp: "Các bạn đi bảo tàng (went to the museum)." },
+      { type: "choice", sub: "B1. True / False", text: "2. Amy bought a dinosaur model.", options: ["True", "False"], correctAns: "True", exp: "Amy mua mô hình khủng long." },
+      { type: "choice", sub: "B1. True / False", text: "3. They saw dinosaur skeletons and bones.", options: ["True", "False"], correctAns: "True", exp: "Đúng theo truyện." },
+      { type: "choice", sub: "B1. True / False", text: "4. The dinosaur was alive.", options: ["False", "True"], correctAns: "False", exp: "Con khủng long là robot." },
+      { type: "choice", sub: "B1. True / False", text: "5. Holly made the robot move.", options: ["True", "False"], correctAns: "True", exp: "Holly dùng bảng điều khiển." },
+      { type: "choice", sub: "B1. True / False", text: "6. Max screamed.", options: ["True", "False"], correctAns: "True", exp: "Max hét lên vì sợ." },
+      { type: "choice", sub: "B2. Câu hỏi", text: "7. Where did they go?", options: ["the dinosaur museum", "the zoo", "Ken's café", "the cinema"], correctAns: "the dinosaur museum", exp: "Đến bảo tàng khủng long." },
+      { type: "choice", sub: "B2. Câu hỏi", text: "8. Was the dinosaur alive?", options: ["No, it was a robot.", "Yes, it was alive.", "No, it was a model.", "Yes, it ran."], correctAns: "No, it was a robot.", exp: "Nó là robot do Holly điều khiển." },
+      { type: "choice", sub: "B2. Câu hỏi", text: "9. How did Holly make the dinosaur move?", options: ["by using controls", "by pulling it", "by speaking", "with food"], correctAns: "by using controls", exp: "'by using the controls!'" },
+      { type: "choice", sub: "B2. Câu hỏi", text: "10. How did Max feel when the dinosaur roared?", options: ["He was scared and screamed", "He was happy", "He laughed", "He went to sleep"], correctAns: "He was scared and screamed", exp: "Max tưởng còn sống nên sợ hét lên." }
+    ],
+    partC: [
+      { type: "choice", sub: "C1. Chọn từ", text: "1. We (went / goed) to the museum.", options: ["went", "goed"], correctAns: "went", exp: "Quá khứ bất quy tắc của go là went." },
+      { type: "choice", sub: "C1. Chọn từ", text: "2. I (didn't go / didn't went) to school.", options: ["didn't go", "didn't went"], correctAns: "didn't go", exp: "Sau didn't dùng động từ nguyên thể." },
+      { type: "choice", sub: "C1. Chọn từ", text: "3. She (buyed / bought) a postcard.", options: ["bought", "buyed"], correctAns: "bought", exp: "buy đổi thành bought." },
+      { type: "choice", sub: "C1. Chọn từ", text: "4. They (didn't eat / didn't ate) fish.", options: ["didn't eat", "didn't ate"], correctAns: "didn't eat", exp: "didn't eat." },
+      { type: "choice", sub: "C1. Chọn từ", text: "5. I (saw / seen) a big skeleton.", options: ["saw", "seen"], correctAns: "saw", exp: "Quá khứ của see là saw." },
+      { type: "choice", sub: "C1. Chọn từ", text: "6. He (didn't wear / didn't wore) a hat.", options: ["didn't wear", "didn't wore"], correctAns: "didn't wear", exp: "didn't wear." },
+      { type: "input", sub: "C2. Chia động từ", text: "7. We ______ (go) to the zoo on Sunday.", correctAns: "went", exp: "go đổi thành went." },
+      { type: "input", sub: "C2. Chia động từ", text: "8. Amy ______ (not see) the robot.", correctAns: "didn't see", exp: "didn't see." },
+      { type: "input", sub: "C2. Chia động từ", text: "9. I ______ (eat) a sandwich at lunch.", correctAns: "ate", exp: "eat đổi thành ate." },
+      { type: "input", sub: "C2. Chia động từ", text: "10. They ______ (not buy) any toys.", correctAns: "didn't buy", exp: "didn't buy." },
+      { type: "choice", sub: "C3. Sắp xếp", text: "11. went / We / the / museum / to", options: ["We went to the museum.", "We to the museum went.", "Went we to the museum."], correctAns: "We went to the museum.", exp: "We went to the museum." },
+      { type: "choice", sub: "C3. Sắp xếp", text: "12. didn't / I / school / go / to", options: ["I didn't go to school.", "I go didn't to school.", "I didn't to school go."], correctAns: "I didn't go to school.", exp: "I didn't go to school." },
+      { type: "choice", sub: "C4. Sửa lỗi sai", text: "13. Sửa lỗi: 'We goed to the museum.'", options: ["We went to the museum.", "We go to the museum yesterday.", "We were go to the museum."], correctAns: "We went to the museum.", exp: "go đổi thành went." },
+      { type: "choice", sub: "C4. Sửa lỗi sai", text: "14. Sửa lỗi: 'I didn't saw dinosaurs.'", options: ["I didn't see dinosaurs.", "I didn't seen dinosaurs.", "I not saw dinosaurs."], correctAns: "I didn't see dinosaurs.", exp: "didn't + V nguyên thể: see." },
+      { type: "choice", sub: "C4. Sửa lỗi sai", text: "15. Sửa lỗi: 'She buyed a model.'", options: ["She bought a model.", "She buy a model yesterday.", "She was buy a model."], correctAns: "She bought a model.", exp: "buy đổi thành bought." }
+    ]
+  },
+
+  // REVIEW 2
+  "rev2": {
+    title: "Tiết 12: Review 2 & Extensive reading (Sport)",
+    partATitle: "A. Vocabulary Review (10 câu)",
+    partBTitle: "B. Grammar Review (10 câu)",
+    partCTitle: "C. Extensive Reading: Sport (15 câu)",
+    partA: [
+      { type: "input", sub: "A1. Xếp chữ", text: "1. Unscramble: yrhtpo →", correctAns: "trophy", exp: "trophy." },
+      { type: "input", sub: "A1. Xếp chữ", text: "2. Unscramble: iestanrr →", correctAns: "trainers", exp: "trainers." },
+      { type: "input", sub: "A1. Xếp chữ", text: "3. Unscramble: raeldd →", correctAns: "ladder", exp: "ladder." },
+      { type: "input", sub: "A1. Xếp chữ", text: "4. Unscramble: kakrcscu →", correctAns: "rucksack", exp: "rucksack." },
+      { type: "input", sub: "A1. Xếp chữ", text: "5. Unscramble: tueppp →", correctAns: "puppet", exp: "puppet." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "6. You win it in a competition:", options: ["trophy", "ladder", "puppet", "trainers"], correctAns: "trophy", exp: "Cúp: trophy." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "7. You wear them on your feet to play sport:", options: ["trainers", "trophy", "racket", "ladder"], correctAns: "trainers", exp: "Giày thể thao: trainers." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "8. You use it to climb:", options: ["ladder", "racket", "jacket", "trophy"], correctAns: "ladder", exp: "Thang: ladder." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "9. A circle where roads meet:", options: ["roundabout", "map", "traffic light", "station"], correctAns: "roundabout", exp: "Bùng binh: roundabout." },
+      { type: "choice", sub: "A2. Định nghĩa", text: "10. Cost a lot of money:", options: ["expensive", "cheap", "wooden", "modern"], correctAns: "expensive", exp: "Đắt đỏ: expensive." }
+    ],
+    partB: [
+      { type: "choice", sub: "B1. Đại từ sở hữu", text: "1. The red racket is (mine / my).", options: ["mine", "my"], correctAns: "mine", exp: "Đứng cuối câu dùng mine." },
+      { type: "choice", sub: "B1. have to", text: "2. We (have to / has to) hurry.", options: ["have to", "has to"], correctAns: "have to", exp: "We đi với have to." },
+      { type: "choice", sub: "B1. So sánh", text: "3. This bed is (more comfortable / comfortabler) than that one.", options: ["more comfortable", "comfortabler"], correctAns: "more comfortable", exp: "more comfortable than." },
+      { type: "choice", sub: "B1. So sánh nhất", text: "4. It was (the worst / the worse) day.", options: ["the worst", "the worse"], correctAns: "the worst", exp: "the worst." },
+      { type: "choice", sub: "B1. Trạng từ", text: "5. He ran (slow / slowly).", options: ["slowly", "slow"], correctAns: "slowly", exp: "Bổ nghĩa cho động từ ran dùng trạng từ slowly." },
+      { type: "choice", sub: "B1. why / because", text: "6. They were late (because / why) they got lost.", options: ["because", "why"], correctAns: "because", exp: "Giải thích lý do dùng because." },
+      { type: "choice", sub: "B2. Sắp xếp", text: "7. mine / The / is / jacket", options: ["The jacket is mine.", "The mine is jacket.", "Is the jacket mine."], correctAns: "The jacket is mine.", exp: "The jacket is mine." },
+      { type: "choice", sub: "B2. Sắp xếp", text: "8. have / We / to / hurry", options: ["We have to hurry.", "We to hurry have.", "Have we to hurry."], correctAns: "We have to hurry.", exp: "We have to hurry." },
+      { type: "choice", sub: "B2. Sắp xếp", text: "9. the / It / is / most / expensive / bed", options: ["It is the most expensive bed.", "It is the expensive most bed.", "It is most the expensive bed."], correctAns: "It is the most expensive bed.", exp: "It is the most expensive bed." },
+      { type: "choice", sub: "B2. Sắp xếp", text: "10. played / They / well", options: ["They played well.", "They well played.", "Well they played."], correctAns: "They played well.", exp: "They played well." }
+    ],
+    partC: [
+      { type: "choice", sub: "C1. Extensive Reading", text: "1. Where did rugby start?", options: ["In England", "In America", "In Jamaica", "In France"], correctAns: "In England", exp: "Bóng bầu dục rugby bắt đầu ở nước Anh." },
+      { type: "choice", sub: "C1. Extensive Reading", text: "2. What is the biggest American football game?", options: ["The Super Bowl", "The World Cup", "The Olympic Games", "Festival Day"], correctAns: "The Super Bowl", exp: "Trận đấu lớn nhất là Super Bowl." },
+      { type: "choice", sub: "C1. Extensive Reading", text: "3. Who is taller, Tyson Jackson (195cm) or Matthew Stafford (188cm)?", options: ["Tyson Jackson", "Matthew Stafford"], correctAns: "Tyson Jackson", exp: "Tyson Jackson cao 195cm so với 188cm." },
+      { type: "choice", sub: "C1. Extensive Reading", text: "4. Did Usain Bolt win gold medals at the Beijing Olympics?", options: ["Yes, he did", "No, he didn't"], correctAns: "Yes, he did", exp: "Usain Bolt đã giành 3 huy chương vàng tại Bắc Kinh." },
+      { type: "choice", sub: "C1. Extensive Reading", text: "5. How many players are there on a modern American football team?", options: ["Eleven (11)", "Ten (10)", "Nine (9)", "Twelve (12)"], correctAns: "Eleven (11)", exp: "Có 11 cầu thủ trên sân." },
+      { type: "choice", sub: "C1. Extensive Reading", text: "6. Where was Usain Bolt born?", options: ["In Jamaica", "In America", "In England", "In Australia"], correctAns: "In Jamaica", exp: "Usain Bolt sinh ra tại Jamaica." },
+      { type: "choice", sub: "C1. Extensive Reading", text: "7. What sport did Usain Bolt play before running?", options: ["cricket and football", "basketball", "tennis", "rugby"], correctAns: "cricket and football", exp: "Chơi cricket và bóng đá." },
+      { type: "choice", sub: "C1. Extensive Reading", text: "8. How tall is Usain Bolt?", options: ["196cm", "182cm", "195cm", "175cm"], correctAns: "196cm", exp: "Cao 196cm." },
+      { type: "choice", sub: "C1. Extensive Reading", text: "9. People call Usain Bolt:", options: ["Lightning Bolt", "Super Runner", "Fast Man", "Gold Champion"], correctAns: "Lightning Bolt", exp: "Biệt danh: Lightning Bolt." },
+      { type: "choice", sub: "C1. Extensive Reading", text: "10. In American football, how many minutes of play are there?", options: ["60 minutes", "90 minutes", "40 minutes", "100 minutes"], correctAns: "60 minutes", exp: "Có 60 phút thi đấu chính thức." },
+      { type: "choice", sub: "C2. True / False", text: "11. American football players wear helmets and special clothes.", options: ["True", "False"], correctAns: "True", exp: "Họ đội mũ bảo hiểm và đồ bảo hộ vì môn thể thao va chạm mạnh." },
+      { type: "choice", sub: "C2. True / False", text: "12. Usain Bolt won a gold medal at the Athens Olympics in 2004.", options: ["False", "True"], correctAns: "False", exp: "Năm 2004 anh bị chấn thương chân nên không giành huy chương." },
+      { type: "choice", sub: "C2. True / False", text: "13. In rugby, players kicked and ran with an oval ball.", options: ["True", "False"], correctAns: "True", exp: "Đúng theo lịch sử phát triển bóng rugby." },
+      { type: "choice", sub: "C2. True / False", text: "14. Tyson Jackson plays for Kansas City Chiefs.", options: ["True", "False"], correctAns: "True", exp: "Đúng theo thông tin hồ sơ cầu thủ." },
+      { type: "choice", sub: "C2. True / False", text: "15. Usain Bolt's favourite football team is Manchester United.", options: ["True", "False"], correctAns: "True", exp: "Đội bóng yêu thích của anh là Manchester United." }
     ]
   }
 };
 
 /* =========================================================
-   APP STATE & INITIALIZATION
+   3. APP STATE & PERSISTENCE
    ========================================================= */
 function shuffleArray(array) {
   const arr = [...array];
@@ -1157,21 +1277,29 @@ let state = {
 function initApp() {
   Confetti.init();
 
+  // Load PINs
   const savedPins = localStorage.getItem("ff4_pins_standard");
   state.pins = savedPins ? JSON.parse(savedPins) : {};
   state.students.forEach(s => {
     if (!state.pins[s]) state.pins[s] = "0000";
   });
 
+  // Load Scores
   const savedScores = localStorage.getItem("ff4_scores_standard");
   state.scores = savedScores ? JSON.parse(savedScores) : {};
   state.students.forEach(s => {
     if (!state.scores[s]) state.scores[s] = { session: 0, month: 0, done: {} };
   });
 
+  // Active Lesson
   const savedLesson = localStorage.getItem("ff4_active_lesson_standard");
-  state.activeLesson = (savedLesson && state.lessons[savedLesson]) ? savedLesson : "u1_l1";
+  if (savedLesson && state.lessons[savedLesson]) {
+    state.activeLesson = savedLesson;
+  } else {
+    state.activeLesson = "u1_l1";
+  }
 
+  // Locks
   const savedLocks = localStorage.getItem("ff4_locks_standard");
   state.locks = savedLocks ? JSON.parse(savedLocks) : {};
   Object.keys(state.lessons).forEach(lId => {
@@ -1180,6 +1308,7 @@ function initApp() {
     }
   });
 
+  // Logged Student
   const logged = localStorage.getItem("ff4_logged_student_standard");
   state.currentStudent = (logged && state.students.includes(logged)) ? logged : state.students[0];
 
@@ -1188,12 +1317,9 @@ function initApp() {
   renderLeaderboard();
   renderTeacherPinList();
   bindStaticEvents();
-
-  CloudManager.fetchGlobalScores();
-  setInterval(() => CloudManager.fetchGlobalScores(), 10000);
 }
 
-function saveLocalState() {
+function saveState() {
   localStorage.setItem("ff4_pins_standard", JSON.stringify(state.pins));
   localStorage.setItem("ff4_scores_standard", JSON.stringify(state.scores));
   localStorage.setItem("ff4_locks_standard", JSON.stringify(state.locks));
@@ -1269,7 +1395,7 @@ function updateUI() {
 }
 
 /* =========================================================
-   SỰ KIỆN GIAO DIỆN
+   4. SỰ KIỆN GIAO DIỆN
    ========================================================= */
 function bindStaticEvents() {
   document.getElementById("active-lesson-selector").addEventListener("change", (e) => {
@@ -1277,7 +1403,7 @@ function bindStaticEvents() {
     if (!state.locks[state.activeLesson]) {
       state.locks[state.activeLesson] = { partA: false, partB: true, partC: true };
     }
-    saveLocalState();
+    saveState();
     renderLessonPicker();
     updateUI();
   });
@@ -1291,10 +1417,7 @@ function bindStaticEvents() {
   document.getElementById("btn-start-partC").addEventListener("click", () => startQuiz("partC"));
 
   document.getElementById("nav-btn-home").addEventListener("click", () => navigate("home"));
-  document.getElementById("nav-btn-leaderboard").addEventListener("click", () => {
-    navigate("leaderboard");
-    CloudManager.fetchGlobalScores();
-  });
+  document.getElementById("nav-btn-leaderboard").addEventListener("click", () => navigate("leaderboard"));
   document.getElementById("nav-btn-teacher").addEventListener("click", () => navigate("teacher"));
 
   document.getElementById("btn-rank-session").addEventListener("click", () => switchRankTab("session"));
@@ -1330,6 +1453,9 @@ function navigate(viewName) {
   }
 }
 
+/* =========================================================
+   5. ĐĂNG NHẬP HỌC SINH
+   ========================================================= */
 function openStudentLoginModal() {
   const sel = document.getElementById("modal-select-student");
   sel.innerHTML = state.students.map(s => `<option value="${s}" ${s === state.currentStudent ? "selected" : ""}>${s}</option>`).join("");
@@ -1348,7 +1474,7 @@ function confirmStudentLogin() {
 
   if (pinInput === actualPin) {
     state.currentStudent = chosen;
-    saveLocalState();
+    saveState();
     closeStudentLoginModal();
     updateUI();
     SoundFX.playSuccess();
@@ -1359,6 +1485,9 @@ function confirmStudentLogin() {
   }
 }
 
+/* =========================================================
+   6. BỘ TRÌNH CHIẾU BÀI TẬP VÀ GIẢI THÍCH
+   ========================================================= */
 function startQuiz(part) {
   const lessonLocks = state.locks[state.activeLesson] || {};
   if (lessonLocks[part]) {
@@ -1415,17 +1544,29 @@ function renderQuestion() {
       html += `<button class="option-btn" data-opt="${encodeURIComponent(opt)}">${opt} <span>➔</span></button>`;
     });
     html += `</div>`;
+  } else if (qData.type === "input") {
+    html += `
+      <input type="text" id="quiz-input-field" class="input-text" placeholder="Gõ câu trả lời vào đây..." autocomplete="off">
+      <button class="btn btn-primary" id="btn-submit-input">Gửi Câu Trả Lời 🚀</button>
+    `;
   }
 
   html += `<div id="explanation-container"></div>`;
   box.innerHTML = html;
 
-  box.querySelectorAll(".option-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const chosen = decodeURIComponent(btn.getAttribute("data-opt"));
-      handleChoiceAnswer(btn, chosen);
+  if (qData.type === "choice") {
+    box.querySelectorAll(".option-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const chosen = decodeURIComponent(btn.getAttribute("data-opt"));
+        handleChoiceAnswer(btn, chosen);
+      });
     });
-  });
+  } else if (qData.type === "input") {
+    document.getElementById("btn-submit-input").addEventListener("click", handleInputAnswer);
+    document.getElementById("quiz-input-field").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") handleInputAnswer();
+    });
+  }
 }
 
 function handleChoiceAnswer(btnElement, selectedOption) {
@@ -1454,6 +1595,33 @@ function handleChoiceAnswer(btnElement, selectedOption) {
   }
 }
 
+function handleInputAnswer() {
+  const inputEl = document.getElementById("quiz-input-field");
+  const submitBtn = document.getElementById("btn-submit-input");
+  const userVal = inputEl.value.trim().toLowerCase();
+  const qData = state.currentQuiz.questions[state.currentQuiz.index];
+
+  if (!userVal) {
+    alert("Em hãy gõ đáp án trước nhé!");
+    return;
+  }
+
+  inputEl.disabled = true;
+  submitBtn.disabled = true;
+
+  if (userVal === qData.correctAns.trim().toLowerCase()) {
+    inputEl.style.borderColor = "var(--success)";
+    SoundFX.playSuccess();
+    Confetti.fire(35);
+    state.currentQuiz.scoreThisRun += 10;
+    setTimeout(nextQuestion, 700);
+  } else {
+    inputEl.style.borderColor = "var(--danger)";
+    SoundFX.playWrong();
+    showExplanation(qData.correctAns, qData.exp);
+  }
+}
+
 function showExplanation(correctAnswer, expText) {
   const expBox = document.getElementById("explanation-container");
   expBox.innerHTML = `
@@ -1477,7 +1645,7 @@ function nextQuestion() {
   }
 }
 
-async function finishQuiz() {
+function finishQuiz() {
   const earned = state.currentQuiz.scoreThisRun;
   const currentSt = state.scores[state.currentStudent];
 
@@ -1486,11 +1654,9 @@ async function finishQuiz() {
   if (!currentSt.done) currentSt.done = {};
   currentSt.done[`${state.activeLesson}_${state.currentQuiz.part}`] = true;
 
-  saveLocalState();
+  saveState();
   SoundFX.playWin();
   Confetti.fire(90);
-
-  await CloudManager.pushGlobalScores();
 
   const box = document.getElementById("quiz-body");
   box.innerHTML = `
@@ -1508,7 +1674,7 @@ async function finishQuiz() {
 }
 
 /* =========================================================
-   BẢNG VÀNG TOÀN LỚP & KHU VỰC GIÁO VIÊN
+   7. BẢNG VÀNG & KHU VỰC GIÁO VIÊN
    ========================================================= */
 function switchRankTab(type) {
   state.rankTab = type;
@@ -1571,6 +1737,7 @@ function renderLeaderboard() {
 
 function unlockTeacher() {
   const pin = document.getElementById("teacher-pin").value;
+  // Mã PIN bảo mật của cô giáo
   if (pin === "260260") {
     document.getElementById("teacher-auth").style.display = "none";
     document.getElementById("teacher-controls").style.display = "block";
@@ -1588,12 +1755,11 @@ function lockTeacher() {
   navigate("home");
 }
 
-async function toggleLock(part, isUnlocked) {
+function toggleLock(part, isUnlocked) {
   if (!state.locks[state.activeLesson]) state.locks[state.activeLesson] = {};
   state.locks[state.activeLesson][part] = !isUnlocked;
-  saveLocalState();
+  saveState();
   updateUI();
-  await CloudManager.pushGlobalScores();
 }
 
 function backupData() {
@@ -1629,22 +1795,21 @@ function renderTeacherPinList() {
   container.innerHTML = html;
 
   container.querySelectorAll(".btn-change-pin").forEach(btn => {
-    btn.addEventListener("click", async () => {
+    btn.addEventListener("click", () => {
       const sName = btn.getAttribute("data-st");
       const current = state.pins[sName] || "0000";
       const newPin = prompt(`Nhập PIN mới cho học sinh ${sName}:`, current);
       if (newPin && newPin.trim() !== "") {
         state.pins[sName] = newPin.trim();
-        saveLocalState();
+        saveState();
         renderTeacherPinList();
-        await CloudManager.pushGlobalScores();
         alert(`Đã đổi PIN của ${sName} thành: ${newPin.trim()}`);
       }
     });
   });
 }
 
-async function resetScores(type) {
+function resetScores(type) {
   const msg = type === "session"
     ? "Cô có chắc muốn Reset ĐIỂM BUỔI NÀY về 0 để mở buổi mới?"
     : "Cô có chắc muốn Reset BẢNG VÀNG THÁNG về 0?";
@@ -1656,11 +1821,10 @@ async function resetScores(type) {
         if (type === "session") state.scores[s].done = {};
       }
     });
-    saveLocalState();
+    saveState();
     renderLeaderboard();
     updateUI();
-    await CloudManager.pushGlobalScores();
-    alert("Đã reset điểm thành công trên toàn bộ hệ thống lớp!");
+    alert("Đã reset điểm thành công!");
   }
 }
 
